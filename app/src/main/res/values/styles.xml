@@ -8,4 +8,7 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
+    <style name="DoubleSeekBarStyle">
+        <item name="lineStep">2dp</item>
+    </style>
 </resources>
