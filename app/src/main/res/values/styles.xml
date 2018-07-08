@@ -8,7 +8,11 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
-    <style name="DoubleSeekBarStyle">
+    <style name="BarWithLimitStyle">
         <item name="lineStep">2dp</item>
+        <item name="barHeight">12dp</item>
+        <item name="progressBackground">#000</item>
+        <item name="progressSelected">#0F0</item>
+        <item name="progressDisabled">#F00</item>
     </style>
 </resources>

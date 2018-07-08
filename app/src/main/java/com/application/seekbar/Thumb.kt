@@ -21,18 +21,18 @@ class Thumb @JvmOverloads constructor(
         range = Range(100, 200)
     }
 
+    var prevX = 0f
     override fun onTouchEvent(event: MotionEvent): Boolean {
-        var x = 0f
         if (range.contains(event.x.toInt())) {
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> {
-                    x = event.x
+                    prevX = event.x
                     return true
                 }
                 MotionEvent.ACTION_MOVE -> {
-                    val delta = x - event.x
+                    val delta = prevX - event.x
                     listener?.invoke(delta.toInt())
-                    x = event.x
+                    prevX = event.x
                     return true
                 }
             }
