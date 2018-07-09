@@ -1,21 +1,29 @@
 package com.application.seekbar
 
 import android.content.Context
+import android.support.constraint.ConstraintLayout
 import android.util.AttributeSet
-import android.view.View
-import android.widget.FrameLayout
+import android.view.LayoutInflater
+import kotlinx.android.synthetic.main.layout_double_seek_bar.view.*
 
 /**
  * Created on 06.07.18.
  */
 class DoubleSeekBarLayout @JvmOverloads constructor(
         context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0) :
-        FrameLayout(context, attrs, defStyleAttr) {
+        ConstraintLayout(context, attrs, defStyleAttr) {
+    var characteristics: Characteristics? = null
+        set(value) {
+            field = value
+            updateCharacteristics(field!!)
+        }
 
-    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        val widthMode = View.MeasureSpec.getMode(widthMeasureSpec)
-        val widthSize = View.MeasureSpec.getSize(widthMeasureSpec)
-        val heightMode = View.MeasureSpec.getMode(heightMeasureSpec)
-        val heightSize = View.MeasureSpec.getSize(heightMeasureSpec)
+    init {
+        LayoutInflater.from(context).inflate(R.layout.layout_double_seek_bar, this)
+    }
+
+    private fun updateCharacteristics(newValue: Characteristics) {
+        barWithLimit.abstractCharacteristics = newValue
+        leftThumb.range
     }
 }

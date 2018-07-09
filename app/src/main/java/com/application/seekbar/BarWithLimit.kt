@@ -25,19 +25,25 @@ class BarWithLimit @JvmOverloads constructor(context: Context, attrs: AttributeS
     private val selectedColor: Int
 
 
-    private val abstractCharacteristics by lazy { evaluateCharacteristics() }
     private lateinit var viewRange: Range<Int>
+
+    var abstractCharacteristics: Characteristics? = null
+        set(value) {
+            field = value
+            xyCharacteristics = convertToXY(field!!, viewRange)
+        }
 
     /**
      * Same as [abstractCharacteristics] but converted to xy coordinate. Is used for better performance
-     * and prevent recalculating it each time
+     * and prevent recalculating after each iteration
      */
     private lateinit var xyCharacteristics: Characteristics
 
     private var prevX = 0f
 
     init {
-        val styleAttrs = context.obtainStyledAttributes(attrs, R.styleable.BarWithLimit, defStyleAttr, R.style.BarWithLimitStyle)
+        val theme = context.theme
+        val styleAttrs = theme.obtainStyledAttributes(attrs, R.styleable.BarWithLimit, defStyleAttr, R.style.DefaultBarWithLimitStyle)
         lineStep = styleAttrs.getDimension(R.styleable.BarWithLimit_lineStep, 10f)
         viewHeight = styleAttrs.getDimension(R.styleable.BarWithLimit_barHeight, 10f)
         backgroundColor = styleAttrs.getColor(R.styleable.BarWithLimit_progressBackground, Color.BLACK)
@@ -45,6 +51,9 @@ class BarWithLimit @JvmOverloads constructor(context: Context, attrs: AttributeS
         selectedColor = styleAttrs.getColor(R.styleable.BarWithLimit_progressSelected, Color.CYAN)
 
         styleAttrs.recycle()
+        if (isInEditMode) {
+            abstractCharacteristics = evaluateCharacteristics()
+        }
     }
 
     private val selectedPaint by lazy {
@@ -79,8 +88,8 @@ class BarWithLimit @JvmOverloads constructor(context: Context, attrs: AttributeS
             }
             MotionEvent.ACTION_MOVE -> {
                 val delta = prevX - event.x
-                with(abstractCharacteristics) {
-                    val deltaTranslated = delta * abstractCharacteristics.visibleRange.width() / xyCharacteristics.visibleRange.width()
+                with(abstractCharacteristics!!) {
+                    val deltaTranslated = delta * this.visibleRange.width() / xyCharacteristics.visibleRange.width()
                     val visibleRangeUpdated = visibleRange.shift(deltaTranslated.toInt())
                     if (totalRange.contains(visibleRangeUpdated)) {
                         selectedRange = selectedRange.shift(deltaTranslated.toInt())
@@ -189,7 +198,7 @@ class BarWithLimit @JvmOverloads constructor(context: Context, attrs: AttributeS
         setMeasuredDimension(widthSize, height)
 
         viewRange = Range(paddingStart, measuredWidth - paddingEnd)
-        xyCharacteristics = convertToXY(abstractCharacteristics, viewRange)
+        xyCharacteristics = convertToXY(abstractCharacteristics!!, viewRange)
 
         Log.d("BarWithLimit", "Abstract: $abstractCharacteristics")
         Log.d("BarWithLimit", "Real: $xyCharacteristics")

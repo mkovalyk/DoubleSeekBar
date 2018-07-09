@@ -2,23 +2,22 @@
 <!--<android.support.constraint.ConstraintLayout-->
 <FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/football_test2"
     tools:context=".MainActivity">
 
-    <com.application.seekbar.BarWithLimit
-        android:layout_width="wrap_content"
+    <!--<com.application.seekbar.BarWithLimit-->
+    <!--style="@style/BarWithLimitStyle"-->
+    <!--android:layout_width="wrap_content"-->
+    <!--android:layout_height="wrap_content"-->
+    <!--android:layout_gravity="bottom"-->
+    <!--android:padding="8dp"/>-->
+    <com.application.seekbar.DoubleSeekBarLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
-        android:padding="8dp"
-        app:barHeight="16dp"
-        app:lineStep="3dp"
-        app:progressBackground="@color/progressBackgroundColor"
-        app:progressDisabled="@color/lineColor"
-        app:progressSelected="@color/selectedColor"/>
+        android:layout_gravity="bottom"/>
 </FrameLayout>
     <!--app:layout_constraintBottom_toBottomOf="parent"-->
     <!--app:layout_constraintEnd_toEndOf="parent"-->

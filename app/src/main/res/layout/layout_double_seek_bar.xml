@@ -1,21 +1,86 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-             android:layout_width="match_parent"
-             android:layout_height="match_parent">
+<!--<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"-->
+<!--xmlns:app="http://schemas.android.com/apk/res-auto"-->
+<!--android:layout_width="match_parent"-->
+<!--android:layout_height="92dp">-->
+<merge
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <com.application.seekbar.BarWithLimit
+        android:id="@+id/barWithLimit"
+        style="@style/BarWithLimitStyle"
         android:layout_width="match_parent"
-        android:layout_height="18dp"/>
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="24dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:padding="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"/>
+
     <com.application.seekbar.Thumb
-        android:id="@+id/left"
-        android:padding="4dp"
+        android:id="@+id/leftThumb"
         android:layout_width="32dp"
         android:layout_height="32dp"
-        android:src="@drawable/left"/>
-    <com.application.seekbar.Thumb
-        android:id="@+id/right"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginStart="64dp"
         android:padding="4dp"
+        android:src="@drawable/left"
+        app:layout_constraintBottom_toBottomOf="@+id/barWithLimit"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/barWithLimit"/>
+
+    <com.application.seekbar.Thumb
+        android:id="@+id/rightThumb"
         android:layout_width="32dp"
         android:layout_height="32dp"
-        android:src="@drawable/right"/>
-</FrameLayout>
+        android:layout_gravity="center_horizontal"
+        android:layout_marginEnd="8dp"
+        android:padding="4dp"
+        android:src="@drawable/right"
+        app:layout_constraintBottom_toBottomOf="@+id/barWithLimit"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/barWithLimit"/>
+
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_marginBottom="8dp"/>
+
+    <TextView
+        android:id="@+id/right_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/time_placeholder"
+        app:layout_constraintBottom_toTopOf="@+id/right"
+        app:layout_constraintEnd_toEndOf="@+id/right"
+        app:layout_constraintStart_toStartOf="@+id/right"
+        />
+
+    <TextView
+        android:id="@+id/bottom_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:text="@string/time_placeholder"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"/>
+
+    <TextView
+        android:id="@+id/left_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:text="@string/time_placeholder"
+        app:layout_constraintBottom_toTopOf="@+id/left"
+        app:layout_constraintEnd_toEndOf="@+id/left"
+        app:layout_constraintStart_toStartOf="@+id/left"
+        />
+</merge>
+    <!--</android.support.constraint.ConstraintLayout>-->

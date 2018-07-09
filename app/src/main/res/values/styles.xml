@@ -8,11 +8,19 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
-    <style name="BarWithLimitStyle">
+    <style name="DefaultBarWithLimitStyle">
         <item name="lineStep">2dp</item>
         <item name="barHeight">12dp</item>
         <item name="progressBackground">#000</item>
         <item name="progressSelected">#0F0</item>
         <item name="progressDisabled">#F00</item>
+    </style>
+
+    <style name="BarWithLimitStyle" parent="DefaultBarWithLimitStyle">
+        <item name="lineStep">3dp</item>
+        <item name="barHeight">16dp</item>
+        <item name="progressBackground">@color/progressBackgroundColor</item>
+        <item name="progressSelected">@color/selectedColor</item>
+        <item name="progressDisabled">@color/lineColor</item>
     </style>
 </resources>
