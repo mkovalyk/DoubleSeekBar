@@ -4,7 +4,6 @@ import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
 import android.util.Log
-import android.util.Range
 import android.view.MotionEvent
 import android.view.View
 
@@ -25,7 +24,7 @@ class BarWithLimit @JvmOverloads constructor(context: Context, attrs: AttributeS
     private val selectedColor: Int
 
 
-    private lateinit var viewRange: Range<Int>
+    private lateinit var viewRange: Range
 
     var abstractCharacteristics: Characteristics? = null
         set(value) {
@@ -89,10 +88,10 @@ class BarWithLimit @JvmOverloads constructor(context: Context, attrs: AttributeS
             MotionEvent.ACTION_MOVE -> {
                 val delta = prevX - event.x
                 with(abstractCharacteristics!!) {
-                    val deltaTranslated = delta * this.visibleRange.width() / xyCharacteristics.visibleRange.width()
-                    val visibleRangeUpdated = visibleRange.shift(deltaTranslated.toInt())
+                    val deltaTranslated = delta * this.visibleRange.width / xyCharacteristics.visibleRange.width
+                    val visibleRangeUpdated = visibleRange.shiftImmutable(deltaTranslated.toInt())
                     if (totalRange.contains(visibleRangeUpdated)) {
-                        selectedRange = selectedRange.shift(deltaTranslated.toInt())
+                        selectedRange.shift(deltaTranslated.toInt())
                         visibleRange = visibleRangeUpdated
                         viewRange = Range(paddingStart, measuredWidth - paddingEnd)
                         xyCharacteristics = convertToXY(this, viewRange)
@@ -106,27 +105,27 @@ class BarWithLimit @JvmOverloads constructor(context: Context, attrs: AttributeS
         return super.onTouchEvent(event)
     }
 
-    private fun convertToXY(characteristics: Characteristics, viewRange: Range<Int>): Characteristics {
+    private fun convertToXY(characteristics: Characteristics, viewRange: Range): Characteristics {
         with(characteristics) {
-            val allowedRange = Range<Int>(translatePoint(allowedRange.lower, visibleRange, viewRange),
+            val allowedRange = Range(translatePoint(allowedRange.lower, visibleRange, viewRange),
                     translatePoint(allowedRange.upper, visibleRange, viewRange))
 
-            val totalRange = Range<Int>(translatePoint(totalRange.lower, visibleRange, viewRange),
+            val totalRange = Range(translatePoint(totalRange.lower, visibleRange, viewRange),
                     translatePoint(totalRange.upper, visibleRange, viewRange))
 
-            val selectedRange = Range<Int>(translatePoint(selectedRange.lower, visibleRange, viewRange),
+            val selectedRange = Range(translatePoint(selectedRange.lower, visibleRange, viewRange),
                     translatePoint(selectedRange.upper, visibleRange, viewRange))
 
             val current = translatePoint(current, visibleRange, viewRange)
 
-            val range = Range<Int>(translatePoint(visibleRange.lower, visibleRange, viewRange),
+            val range = Range(translatePoint(visibleRange.lower, visibleRange, viewRange),
                     translatePoint(visibleRange.upper, visibleRange, viewRange))
             return Characteristics(allowedRange, totalRange, selectedRange, current, range)
         }
     }
 
-    private fun translatePoint(x: Int, range: Range<Int>, translatedRange: Range<Int>): Int {
-        return translatedRange.clamp((translatedRange.lower + translatedRange.width() * (x - range.lower) / range.width()))
+    private fun translatePoint(x: Int, range: Range, translatedRange: Range): Int {
+        return translatedRange.clamp((translatedRange.lower + translatedRange.width * (x - range.lower) / range.width))
     }
 
     private fun drawBackground(canvas: Canvas) {
