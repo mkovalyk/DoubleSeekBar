@@ -1,35 +1,45 @@
 package com.application.seekbar
 
+import android.util.Log
+
 /**
  * Created on 06.07.18.
  */
-data class Characteristics(
+data class Constraints(
         val allowedRange: Range,
         val totalRange: Range,
         val selectedRange: Range,
         var current: Int,
-        var visibleRange: Range, val tolerate: Boolean = false) {
+        var visibleRange: Range,
+        var minRange: Int = 0,
+        val tolerate: Boolean = false) {
 
     init {
         if (tolerate) {
+            Log.d("Constraints", "Before: $this")
             visibleRange.clamp(totalRange)
             allowedRange.clamp(totalRange)
             selectedRange.clamp(allowedRange)
             current = selectedRange.clamp(current)
+            Log.d("Constraints", "After: $this")
         } else {
             if (!totalRange.contains(allowedRange)) {
-                throw IllegalStateException("Total range should be equal to or bigger than allowed range")
+                throw IllegalStateException("Total range ${totalRange}should be equal to or bigger than allowed range: $allowedRange")
             }
             if (!allowedRange.contains(selectedRange)) {
-                throw IllegalStateException("Allowed range should be equal to or bigger than selected range")
+                throw IllegalStateException("Allowed range:$allowedRange should be equal to or bigger than selected range: $selectedRange")
             }
             if (!totalRange.contains(visibleRange)) {
-                throw IllegalStateException("Total range should be equal to or bigger than visible range")
+                throw IllegalStateException("Total range:$totalRange should be equal to or bigger than visible range:$visibleRange")
             }
             if (!selectedRange.contains(current)) {
-                throw IllegalStateException("Selected range  should contains current value")
+                throw IllegalStateException("Selected range $selectedRange should contains current value: $current")
             }
         }
+    }
+
+    companion object {
+        val EMPTY = Constraints(Range.EMPTY, Range.EMPTY, Range.EMPTY, 0, Range.EMPTY)
     }
 }
 

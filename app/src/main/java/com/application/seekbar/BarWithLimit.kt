@@ -4,18 +4,18 @@ import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
 import android.util.Log
-import android.view.MotionEvent
 import android.view.View
+import kotlin.properties.Delegates
 
 /**
  * Created on 05.07.18.
  */
 class BarWithLimit @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0, defStyleRes: Int = 0) : View(context, attrs, defStyleAttr, defStyleRes) {
     private val path = Path()
-    private val clipRect: RectF by lazy {
-        RectF(xyCharacteristics.visibleRange.lower.toFloat(), 0f,
-                xyCharacteristics.visibleRange.upper.toFloat(), viewHeight)
-    }
+    private var clipRect: RectF? = null
+    //    RectF(viewConstraints.visibleRange.lower.toFloat(), 0f,
+//                viewConstraints.visibleRange.upper.toFloat(), viewHeight)
+//    }
     private val viewHeight: Float
     private val lineStep: Float
 
@@ -23,20 +23,7 @@ class BarWithLimit @JvmOverloads constructor(context: Context, attrs: AttributeS
     private val lineColor: Int
     private val selectedColor: Int
 
-
-    private lateinit var viewRange: Range
-
-    var abstractCharacteristics: Characteristics? = null
-        set(value) {
-            field = value
-            xyCharacteristics = convertToXY(field!!, viewRange)
-        }
-
-    /**
-     * Same as [abstractCharacteristics] but converted to xy coordinate. Is used for better performance
-     * and prevent recalculating after each iteration
-     */
-    private lateinit var xyCharacteristics: Characteristics
+    val viewRange: Range = Range.EMPTY
 
     private var prevX = 0f
 
@@ -50,10 +37,18 @@ class BarWithLimit @JvmOverloads constructor(context: Context, attrs: AttributeS
         selectedColor = styleAttrs.getColor(R.styleable.BarWithLimit_progressSelected, Color.CYAN)
 
         styleAttrs.recycle()
-        if (isInEditMode) {
-            abstractCharacteristics = evaluateCharacteristics()
-        }
+//        if (isInEditMode) {
+//            abstractConstraints = evaluateCharacteristics()
+//        }
     }
+
+    /**
+     * Ranges of views
+     */
+    var viewConstraints: Constraints by Delegates.observable(Constraints.EMPTY) { _, _, newValue ->
+        clipRect = RectF(newValue.visibleRange.lower.toFloat(), 0f, newValue.visibleRange.upper.toFloat(), viewHeight)
+    }
+
 
     private val selectedPaint by lazy {
         Paint().apply {
@@ -68,65 +63,41 @@ class BarWithLimit @JvmOverloads constructor(context: Context, attrs: AttributeS
         isDither = true
     }
 
-    private fun evaluateCharacteristics(): Characteristics {
-        val visibleRange = Range(0, 800)
-        val width = 100
-        val current = (visibleRange.upper + visibleRange.lower) / 2
+//    private fun evaluateCharacteristics(): Constraints {
+//        val visibleRange = Range(0, 800)
+//        val width = 100
+//        val current = (visibleRange.upper + visibleRange.lower) / 2
+//
+//        return Constraints(allowedRange = Range(0, 1000),
+//                totalRange = Range(0 - width / 2, 1000 + width / 2),
+//                selectedRange = Range(10, 300),
+//                current = current, visibleRange = visibleRange)
+//    }
 
-        return Characteristics(allowedRange = Range(0, 1000),
-                totalRange = Range(0 - width / 2, 1000 + width / 2),
-                selectedRange = Range(10, 300),
-                current = current, visibleRange = visibleRange)
-    }
-
-    override fun onTouchEvent(event: MotionEvent): Boolean {
-        when (event.action) {
-            MotionEvent.ACTION_DOWN -> {
-                prevX = event.x
-                return true
-            }
-            MotionEvent.ACTION_MOVE -> {
-                val delta = prevX - event.x
-                with(abstractCharacteristics!!) {
-                    val deltaTranslated = delta * this.visibleRange.width / xyCharacteristics.visibleRange.width
-                    val visibleRangeUpdated = visibleRange.shiftImmutable(deltaTranslated.toInt())
-                    if (totalRange.contains(visibleRangeUpdated)) {
-                        selectedRange.shift(deltaTranslated.toInt())
-                        visibleRange = visibleRangeUpdated
-                        viewRange = Range(paddingStart, measuredWidth - paddingEnd)
-                        xyCharacteristics = convertToXY(this, viewRange)
-                        invalidate()
-                    }
-                }
-                prevX = event.x
-                return true
-            }
-        }
-        return super.onTouchEvent(event)
-    }
-
-    private fun convertToXY(characteristics: Characteristics, viewRange: Range): Characteristics {
-        with(characteristics) {
-            val allowedRange = Range(translatePoint(allowedRange.lower, visibleRange, viewRange),
-                    translatePoint(allowedRange.upper, visibleRange, viewRange))
-
-            val totalRange = Range(translatePoint(totalRange.lower, visibleRange, viewRange),
-                    translatePoint(totalRange.upper, visibleRange, viewRange))
-
-            val selectedRange = Range(translatePoint(selectedRange.lower, visibleRange, viewRange),
-                    translatePoint(selectedRange.upper, visibleRange, viewRange))
-
-            val current = translatePoint(current, visibleRange, viewRange)
-
-            val range = Range(translatePoint(visibleRange.lower, visibleRange, viewRange),
-                    translatePoint(visibleRange.upper, visibleRange, viewRange))
-            return Characteristics(allowedRange, totalRange, selectedRange, current, range)
-        }
-    }
-
-    private fun translatePoint(x: Int, range: Range, translatedRange: Range): Int {
-        return translatedRange.clamp((translatedRange.lower + translatedRange.width * (x - range.lower) / range.width))
-    }
+//    override fun onTouchEvent(event: MotionEvent): Boolean {
+//        when (event.action) {
+//            MotionEvent.ACTION_DOWN -> {
+//                prevX = event.x
+//                return true
+//            }
+//            MotionEvent.ACTION_MOVE -> {
+//                val delta = (prevX - event.x).toInt()
+//                with(viewConstraints) {
+//                    // val deltaTranslated = delta * this.visibleRange.width / viewConstraints.visibleRange.width
+//                    val visibleRangeUpdated = visibleRange.shiftImmutable(delta)
+//                    if (totalRange.contains(visibleRangeUpdated)) {
+//                        visibleRange = visibleRangeUpdated
+////                      viewRange = Range(paddingStart, measuredWidth - paddingEnd)
+////                      viewConstraints = convertToXY(this, viewRange)
+//                        invalidate()
+//                    }
+//                }
+//                prevX = event.x
+//                return true
+//            }
+//        }
+//        return super.onTouchEvent(event)
+//    }
 
     private fun drawBackground(canvas: Canvas) {
         with(canvas) {
@@ -135,15 +106,15 @@ class BarWithLimit @JvmOverloads constructor(context: Context, attrs: AttributeS
             drawColor(backgroundColor)
 
             // TODO optimize for two separate drawing
-            if (xyCharacteristics.totalRange.lower != xyCharacteristics.allowedRange.lower
-                    || xyCharacteristics.totalRange.upper != xyCharacteristics.allowedRange.upper) {
-                clipRect(xyCharacteristics.totalRange.lower.toFloat(), 0f, xyCharacteristics.totalRange.upper.toFloat(),
+            if (viewConstraints.totalRange.lower != viewConstraints.allowedRange.lower
+                    || viewConstraints.totalRange.upper != viewConstraints.allowedRange.upper) {
+                clipRect(viewConstraints.totalRange.lower.toFloat(), 0f, viewConstraints.totalRange.upper.toFloat(),
                         viewHeight)
-                clipRect(xyCharacteristics.allowedRange.lower.toFloat(), 0f, xyCharacteristics.allowedRange.upper.toFloat(),
+                clipRect(viewConstraints.allowedRange.lower.toFloat(), 0f, viewConstraints.allowedRange.upper.toFloat(),
                         viewHeight, Region.Op.DIFFERENCE)
 
-                var iterator = xyCharacteristics.totalRange.lower - viewHeight
-                while (iterator <= xyCharacteristics.totalRange.upper + viewHeight) {
+                var iterator = viewConstraints.totalRange.lower - viewHeight
+                while (iterator <= viewConstraints.totalRange.upper + viewHeight) {
                     drawLine(iterator, viewHeight, iterator + viewHeight, 0f, linePaint)
                     iterator += lineStep
                 }
@@ -156,8 +127,8 @@ class BarWithLimit @JvmOverloads constructor(context: Context, attrs: AttributeS
         with(canvas) {
             save()
             clipPath(path)
-            drawRect(xyCharacteristics.selectedRange.lower.toFloat(), 0f,
-                    xyCharacteristics.selectedRange.upper.toFloat(), viewHeight, selectedPaint)
+            drawRect(viewConstraints.selectedRange.lower.toFloat(), 0f,
+                    viewConstraints.selectedRange.upper.toFloat(), viewHeight, selectedPaint)
             restore()
         }
     }
@@ -178,7 +149,7 @@ class BarWithLimit @JvmOverloads constructor(context: Context, attrs: AttributeS
         val widthSize = View.MeasureSpec.getSize(widthMeasureSpec)
         val heightMode = View.MeasureSpec.getMode(heightMeasureSpec)
         val heightSize = View.MeasureSpec.getSize(heightMeasureSpec)
-        Log.d("BarWithLimit", "WidthMode: $widthMode. WidthSize: $widthSize. " +
+        Log.d(TAG, "WidthMode: $widthMode. WidthSize: $widthSize. " +
                 "HeightMode: $heightMode. HeightSize: $heightSize")
 
         val evaluatedHeight = viewHeight.toInt() + paddingTop + paddingBottom
@@ -191,15 +162,20 @@ class BarWithLimit @JvmOverloads constructor(context: Context, attrs: AttributeS
                         throw  IllegalStateException("WidthMode cannot be found $heightMode")
                     }
                 }
-        Log.d("BarWithLimit", "Result. Width: $widthSize. Height: $height")
+        Log.d(TAG, "Result. Width: $widthSize. Height: $height")
 
         // There is no reason to change width of the bar
         setMeasuredDimension(widthSize, height)
 
-        viewRange = Range(paddingStart, measuredWidth - paddingEnd)
-        xyCharacteristics = convertToXY(abstractCharacteristics!!, viewRange)
+        viewRange.set(paddingStart, measuredWidth - paddingEnd)
+        Log.d(TAG, "View range: $viewRange")
+//        viewConstraints = convertToXY(abstractConstraints!!, viewRange)
 
-        Log.d("BarWithLimit", "Abstract: $abstractCharacteristics")
-        Log.d("BarWithLimit", "Real: $xyCharacteristics")
+//        Log.d(TAG, "Abstract: $abstractConstraints")
+        Log.d(TAG, "Real: $viewConstraints")
+    }
+
+    companion object {
+        const val TAG = "BarWithLimit"
     }
 }

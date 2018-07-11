@@ -16,7 +16,7 @@ class Range constructor(lower: Int, upper: Int) {
 
     private val internalListener: (property: KProperty<*>, oldValue: Int, newValue: Int) -> Unit =
             { _, _, _ ->
-                width = upper - lower
+                width = this.upper - this.lower
                 listener?.invoke(this)
             }
 
@@ -31,7 +31,14 @@ class Range constructor(lower: Int, upper: Int) {
     var listener: ((range: Range) -> Unit)? = null
 
     init {
+        checkInvariance(lower, upper)
         this.width = upper - lower
+    }
+
+    private fun checkInvariance(lower: Int, upper: Int) {
+        if (lower > upper) {
+            throw IllegalStateException("Lower can not be bigger than upper")
+        }
     }
 
     fun shift(delta: Int) {
@@ -39,11 +46,21 @@ class Range constructor(lower: Int, upper: Int) {
         upper += delta
     }
 
+    fun set(lower: Int, upper: Int) {
+        checkInvariance(lower, upper)
+        this.lower = lower
+        this.upper = upper
+    }
+
     fun shiftImmutable(delta: Int): Range {
         return Range(lower + delta, upper + delta)
     }
 
     fun contains(value: Int): Boolean {
+        return value in lower..upper
+    }
+
+    fun contains(value: Float): Boolean {
         return value in lower..upper
     }
 
@@ -64,6 +81,16 @@ class Range constructor(lower: Int, upper: Int) {
         return value
     }
 
+    fun clamp(value: Float): Float {
+        if (value <= lower) {
+            return lower.toFloat()
+        }
+        if (value >= upper) {
+            return upper.toFloat()
+        }
+        return value
+    }
+
     /**
      * Changes current range to fit the range
      */
@@ -76,7 +103,9 @@ class Range constructor(lower: Int, upper: Int) {
         }
     }
 
+    override fun toString() = "Range[$lower: $upper]."
+
     companion object {
-        val EMPTY = Range(0, 0)
+        val EMPTY = Range(0, 1)
     }
 }

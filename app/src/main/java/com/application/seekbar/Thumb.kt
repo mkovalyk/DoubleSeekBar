@@ -2,8 +2,6 @@ package com.application.seekbar
 
 import android.content.Context
 import android.util.AttributeSet
-import android.util.Log
-import android.util.Range
 import android.view.MotionEvent
 import android.widget.ImageView
 
@@ -15,19 +13,18 @@ import android.widget.ImageView
 class Thumb @JvmOverloads constructor(
         context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : ImageView(context, attrs, defStyleAttr) {
-    var range: Range<Float>  = Range(100f, 800f)
+    var range: Range = Range.EMPTY
         set(value) {
             field = value
-            if (!field.contains(x)) {
-                this.x = field.clamp(x)
-                listener?.invoke(this.x)
+            if (!field.contains(center)) {
+                center = field.clamp(center)
+                listener?.invoke(center)
             }
         }
     var listener: ((Float) -> Unit)? = null
-    var prevX = 0f
+    private var prevX = 0f
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
-        Log.d("Thumb", "OnTouchEvent:$event")
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
                 prevX = event.rawX
@@ -35,9 +32,9 @@ class Thumb @JvmOverloads constructor(
             }
             MotionEvent.ACTION_MOVE -> {
                 val delta = (prevX - event.rawX)
-                if (range.contains(this.x - delta)) {
-                    this.x -= delta
-                    listener?.invoke(this.x)
+                if (range.contains(center - delta)) {
+                    center -= delta
+                    listener?.invoke(center)
                     prevX = event.rawX
                 }
                 return true
@@ -45,4 +42,10 @@ class Thumb @JvmOverloads constructor(
         }
         return super.onTouchEvent(event)
     }
+
+    var center: Float
+        get() = x + width / 2
+        set(value) {
+            x = value - width / 2
+        }
 }
