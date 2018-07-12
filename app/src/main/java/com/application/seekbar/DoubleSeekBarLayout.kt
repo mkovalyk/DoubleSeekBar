@@ -33,7 +33,7 @@ class DoubleSeekBarLayout @JvmOverloads constructor(
         rightThumb.listener = { newValue ->
             rightThumbMoved(newValue)
         }
-        barWithLimit.viewRange.listener = { range ->
+        barWithLimit.viewRange.listener = { _ ->
             if (constraints != null) {
                 updateCharacteristics(constraints!!)
             }
@@ -42,14 +42,10 @@ class DoubleSeekBarLayout @JvmOverloads constructor(
 
     private fun rightThumbMoved(newValue: Float) {
         viewConstraints.selectedRange.set(viewConstraints.selectedRange.lower, newValue.toInt())
-        right_label.centerX = rightThumb.centerX
-        translateIfTextLabelsOverlapsWithIndicator()
     }
 
     private fun leftThumbMoved(newValue: Float) {
         viewConstraints.selectedRange.set(newValue.toInt(), viewConstraints.selectedRange.upper)
-        left_label.centerX = leftThumb.centerX
-        translateIfTextLabelsOverlapsWithIndicator()
     }
 
     private fun translateIfTextLabelsOverlapsWithIndicator() {
@@ -63,39 +59,44 @@ class DoubleSeekBarLayout @JvmOverloads constructor(
         Log.d(TAG, "updateCharacteristics: $newValue")
         viewConstraints = convertToXY(newValue, barWithLimit.viewRange)
                 .apply {
-                    selectedRange.listener = { newRange ->
-                        val originConstraints = constraints!!
-                        val lower = translatePoint(newRange.lower, barWithLimit.viewRange, originConstraints.visibleRange)
-                        val upper = translatePoint(newRange.upper, barWithLimit.viewRange, originConstraints.visibleRange)
-                        originConstraints.selectedRange.set(lower, upper)
-
-                        bottom_label.centerX = viewConstraints.selectedRange.center.toFloat()
-
-                        setTime(originConstraints.selectedRange.width, bottom_label)
-                        setTime(originConstraints.current - originConstraints.selectedRange.lower, left_label)
-                        setTime(originConstraints.selectedRange.upper - originConstraints.current, right_label)
-
-                        barWithLimit.invalidate()
-                    }
-                }
-                .apply {
                     leftThumb.range = Range(allowedRange.clamp(visibleRange.lower), current)
                     rightThumb.range = Range(current, allowedRange.clamp(visibleRange.upper))
 
                     leftThumb.centerX = selectedRange.lower.toFloat()
                     rightThumb.centerX = selectedRange.upper.toFloat()
 
-                    left_label.centerX = leftThumb.centerX
-                    right_label.centerX = rightThumb.centerX
-                    translateIfTextLabelsOverlapsWithIndicator()
+//                    left_label.centerX = leftThumb.centerX
+//                    right_label.centerX = rightThumb.centerX
+//                    translateIfTextLabelsOverlapsWithIndicator()
 
                     Log.d(TAG, "left: ${leftThumb.range}. right: ${rightThumb.range}")
                 }
-
                 .also {
+                    it.selectedRange.listener = ::updateSelectedRange
                     barWithLimit.viewConstraints = it
                 }
-        invalidate()
+    }
+
+    private fun updateSelectedRange(newRange: Range) {
+        with(constraints!!) {
+            // convert to origin coordinate
+            val lower = translatePoint(newRange.lower, barWithLimit.viewRange, visibleRange)
+            val upper = translatePoint(newRange.upper, barWithLimit.viewRange, visibleRange)
+            selectedRange.set(lower, upper)
+
+//            setTime(selectedRange.width, bottom_label)
+//            setTime(current - selectedRange.lower, left_label)
+//            setTime(selectedRange.upper - current, right_label)
+//
+            bottom_label.centerX = viewConstraints.selectedRange.center.toFloat()
+
+            right_label.centerX = rightThumb.centerX
+            left_label.centerX = leftThumb.centerX
+            translateIfTextLabelsOverlapsWithIndicator()
+
+
+            barWithLimit.invalidate()
+        }
     }
 
     private fun setTime(time: Int, into: TextView) {
