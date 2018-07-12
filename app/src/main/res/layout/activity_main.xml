@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--<android.support.constraint.ConstraintLayout-->
 <FrameLayout
     android:id="@+id/baseLayout"
     xmlns:android="http://schemas.android.com/apk/res/android"
@@ -9,19 +8,4 @@
     android:background="@drawable/football_test2"
     tools:context=".MainActivity">
 
-    <!--<com.application.seekbar.BarWithLimit-->
-    <!--style="@style/BarWithLimitStyle"-->
-    <!--android:layout_width="wrap_content"-->
-    <!--android:layout_height="wrap_content"-->
-    <!--android:layout_gravity="bottom"-->
-    <!--android:padding="8dp"/>-->
-    <!--<com.application.seekbar.DoubleSeekBarLayout-->
-        <!--android:layout_width="match_parent"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:layout_gravity="bottom"/>-->
 </FrameLayout>
-    <!--app:layout_constraintBottom_toBottomOf="parent"-->
-    <!--app:layout_constraintEnd_toEndOf="parent"-->
-    <!--app:layout_constraintStart_toStartOf="parent"-->
-    <!--app:layout_constraintTop_toTopOf="parent"-->
-    <!--</android.support.constraint.ConstraintLayout>-->

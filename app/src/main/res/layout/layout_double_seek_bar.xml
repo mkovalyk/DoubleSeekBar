@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                                             xmlns:app="http://schemas.android.com/apk/res-auto"
-                                             xmlns:tools="http://schemas.android.com/tools"
-                                             android:layout_width="match_parent"
-                                             android:layout_height="92dp">
-    <!--<merge-->
-    <!--xmlns:android="http://schemas.android.com/apk/res/android"-->
-    <!--xmlns:app="http://schemas.android.com/apk/res-auto">-->
+<!--<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"-->
+<!--xmlns:app="http://schemas.android.com/apk/res-auto"-->
+<!--xmlns:tools="http://schemas.android.com/tools"-->
+<!--android:layout_width="match_parent"-->
+<!--android:layout_height="wrap_content">-->
+<merge
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <com.application.seekbar.BarWithLimit
         android:id="@+id/barWithLimit"
@@ -85,5 +86,17 @@
         app:layout_constraintStart_toStartOf="@+id/leftThumb"
         tools:text="5 s"
         />
-    <!--</merge>-->
-</android.support.constraint.ConstraintLayout>
+
+    <ImageView
+        android:id="@+id/tagIcon"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_marginTop="32dp"
+        android:src="@drawable/ic_tag"
+        app:layout_constraintBottom_toTopOf="@+id/barWithLimit"
+        app:layout_constraintEnd_toEndOf="@+id/barWithLimit"
+        app:layout_constraintStart_toStartOf="@+id/barWithLimit"
+        app:layout_constraintTop_toTopOf="parent"/>
+
+    <!--</android.support.constraint.ConstraintLayout>-->
+</merge>

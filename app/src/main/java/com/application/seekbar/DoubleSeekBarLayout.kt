@@ -41,36 +41,34 @@ class DoubleSeekBarLayout @JvmOverloads constructor(
     }
 
     private fun rightThumbMoved(newValue: Float) {
-        with(viewConstraints) {
-            selectedRange.set(selectedRange.lower, newValue.toInt())
-            right_label.x = rightThumb.centerX - right_label.width / 2
-        }
+        viewConstraints.selectedRange.set(viewConstraints.selectedRange.lower, newValue.toInt())
+        right_label.centerX = rightThumb.centerX
+        translateIfTextLabelsOverlapsWithIndicator()
     }
 
     private fun leftThumbMoved(newValue: Float) {
-        with(viewConstraints) {
-            selectedRange.set(newValue.toInt(), selectedRange.upper)
-            left_label.x = leftThumb.centerX - left_label.width / 2
-        }
+        viewConstraints.selectedRange.set(newValue.toInt(), viewConstraints.selectedRange.upper)
+        left_label.centerX = leftThumb.centerX
+        translateIfTextLabelsOverlapsWithIndicator()
+    }
+
+    private fun translateIfTextLabelsOverlapsWithIndicator() {
+        val distanceToLeft = tagIcon.x - left_label.width - left_label.x
+        val distanceToRight = right_label.x - tagIcon.x - tagIcon.width
+        tagIcon.translationY = minOf(0f, distanceToLeft, distanceToRight)
+        Log.d(TAG, "translateIfTextLabelsOverlapsWithIndicator: ${tagIcon.translationY}")
     }
 
     private fun updateCharacteristics(newValue: Constraints) {
         Log.d(TAG, "updateCharacteristics: $newValue")
         viewConstraints = convertToXY(newValue, barWithLimit.viewRange)
                 .apply {
-                    leftThumb.range = Range(allowedRange.clamp(visibleRange.lower), current)
-                    rightThumb.range = Range(current, allowedRange.clamp(visibleRange.upper))
-                    leftThumb.centerX = selectedRange.lower.toFloat()
-                    rightThumb.centerX = selectedRange.upper.toFloat()
-
-                    Log.d(TAG, "left: ${leftThumb.range}. right: ${rightThumb.range}")
-                }
-                .also {
-                    it.selectedRange.listener = { newRange ->
+                    selectedRange.listener = { newRange ->
                         val originConstraints = constraints!!
                         val lower = translatePoint(newRange.lower, barWithLimit.viewRange, originConstraints.visibleRange)
                         val upper = translatePoint(newRange.upper, barWithLimit.viewRange, originConstraints.visibleRange)
                         originConstraints.selectedRange.set(lower, upper)
+
                         bottom_label.centerX = viewConstraints.selectedRange.center.toFloat()
 
                         setTime(originConstraints.selectedRange.width, bottom_label)
@@ -80,6 +78,20 @@ class DoubleSeekBarLayout @JvmOverloads constructor(
                         barWithLimit.invalidate()
                     }
                 }
+                .apply {
+                    leftThumb.range = Range(allowedRange.clamp(visibleRange.lower), current)
+                    rightThumb.range = Range(current, allowedRange.clamp(visibleRange.upper))
+
+                    leftThumb.centerX = selectedRange.lower.toFloat()
+                    rightThumb.centerX = selectedRange.upper.toFloat()
+
+                    left_label.centerX = leftThumb.centerX
+                    right_label.centerX = rightThumb.centerX
+                    translateIfTextLabelsOverlapsWithIndicator()
+
+                    Log.d(TAG, "left: ${leftThumb.range}. right: ${rightThumb.range}")
+                }
+
                 .also {
                     barWithLimit.viewConstraints = it
                 }
