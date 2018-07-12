@@ -13,9 +13,6 @@ import kotlin.properties.Delegates
 class BarWithLimit @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0, defStyleRes: Int = 0) : View(context, attrs, defStyleAttr, defStyleRes) {
     private val path = Path()
     private var clipRect: RectF? = null
-    //    RectF(viewConstraints.visibleRange.lower.toFloat(), 0f,
-//                viewConstraints.visibleRange.upper.toFloat(), viewHeight)
-//    }
     private val viewHeight: Float
     private val lineStep: Float
 
@@ -37,9 +34,6 @@ class BarWithLimit @JvmOverloads constructor(context: Context, attrs: AttributeS
         selectedColor = styleAttrs.getColor(R.styleable.BarWithLimit_progressSelected, Color.CYAN)
 
         styleAttrs.recycle()
-//        if (isInEditMode) {
-//            abstractConstraints = evaluateCharacteristics()
-//        }
     }
 
     /**
@@ -133,17 +127,6 @@ class BarWithLimit @JvmOverloads constructor(context: Context, attrs: AttributeS
         }
     }
 
-    override fun onDraw(canvas: Canvas) {
-        super.onDraw(canvas)
-        path.rewind()
-        path.addRoundRect(clipRect, viewHeight / 2f, viewHeight / 2f, Path.Direction.CCW)
-
-        canvas.translate(0f, paddingTop.toFloat())
-
-        drawBackground(canvas)
-        drawSelectedArea(canvas)
-    }
-
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val widthMode = View.MeasureSpec.getMode(widthMeasureSpec)
         val widthSize = View.MeasureSpec.getSize(widthMeasureSpec)
@@ -166,13 +149,28 @@ class BarWithLimit @JvmOverloads constructor(context: Context, attrs: AttributeS
 
         // There is no reason to change width of the bar
         setMeasuredDimension(widthSize, height)
+    }
 
-        viewRange.set(paddingStart, measuredWidth - paddingEnd)
-        Log.d(TAG, "View range: $viewRange")
-//        viewConstraints = convertToXY(abstractConstraints!!, viewRange)
+    override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
+        super.onLayout(changed, left, top, right, bottom)
+        // only after view is laid out margins are available
+        val marginStart = x.toInt()
+        viewRange.set(marginStart + paddingStart, marginStart + measuredWidth - paddingEnd - paddingStart)
+        Log.d(TAG, "onLayout: x=$x. Range: $viewRange")
+    }
 
-//        Log.d(TAG, "Abstract: $abstractConstraints")
-        Log.d(TAG, "Real: $viewConstraints")
+    override fun onDraw(canvas: Canvas) {
+        super.onDraw(canvas)
+        path.rewind()
+        path.addRoundRect(clipRect, viewHeight / 2f, viewHeight / 2f, Path.Direction.CCW)
+
+        //Translate back by margin from start to draw in correct position.
+        // It is used that way because to evaluate view range we need to know position related to it's
+        // parent which includes margin from left and right.
+        canvas.translate(-x, paddingTop.toFloat())
+
+        drawBackground(canvas)
+        drawSelectedArea(canvas)
     }
 
     companion object {

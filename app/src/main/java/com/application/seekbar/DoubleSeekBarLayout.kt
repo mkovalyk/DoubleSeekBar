@@ -31,31 +31,24 @@ class DoubleSeekBarLayout @JvmOverloads constructor(
         rightThumb.listener = { newValue ->
             rightThumbMoved(newValue)
         }
+        barWithLimit.viewRange.listener = { range ->
+            if (constraints != null) {
+                updateCharacteristics(constraints!!)
+            }
+        }
     }
 
     private fun rightThumbMoved(newValue: Float) {
         with(viewConstraints) {
-
-            // todo move text label as well
-
-//            val maxLeft = min(current, newValue.toInt() - minRange)
-//            leftThumb.range = Range(allowedRange.clamp(visibleRange.lower), allowedRange.clamp(maxLeft))
-            Log.d(TAG, "RightThumbChanged: Value: $newValue ")
-//            Log.d(TAG, "RightThumbChanged: Left - ${leftThumb.range} ")
             selectedRange.set(selectedRange.lower, newValue.toInt())
+            right_label.x = rightThumb.centerX - right_label.width / 2
         }
     }
 
     private fun leftThumbMoved(newValue: Float) {
         with(viewConstraints) {
-
-            // todo move text label as well
-
-//            val minRight = max(current, newValue.toInt() + minRange)
-//            rightThumb.range = Range(minRight, allowedRange.clamp(visibleRange.upper))
-            Log.d(TAG, "LeftThumbChanged: value : $newValue ")
-//            Log.d(TAG, "LeftThumbChanged: Right - ${rightThumb.range} ")
             selectedRange.set(newValue.toInt(), selectedRange.upper)
+            left_label.x = leftThumb.centerX - left_label.width / 2
         }
     }
 
@@ -65,13 +58,21 @@ class DoubleSeekBarLayout @JvmOverloads constructor(
                 .apply {
                     leftThumb.range = Range(allowedRange.clamp(visibleRange.lower), current)
                     rightThumb.range = Range(current, allowedRange.clamp(visibleRange.upper))
+                    leftThumb.centerX = selectedRange.lower.toFloat()
+                    rightThumb.centerX = selectedRange.upper.toFloat()
+
                     Log.d(TAG, "left: ${leftThumb.range}. right: ${rightThumb.range}")
                 }
                 .also {
                     it.selectedRange.listener = { newRange ->
-                        val lower = translatePoint(newRange.lower, barWithLimit.viewRange, it.visibleRange)
-                        val upper = translatePoint(newRange.upper, barWithLimit.viewRange, it.visibleRange)
-                        constraints!!.selectedRange.set(lower, upper)
+                        val originConstraints = constraints!!
+                        val lower = translatePoint(newRange.lower, barWithLimit.viewRange, originConstraints.visibleRange)
+                        val upper = translatePoint(newRange.upper, barWithLimit.viewRange, originConstraints.visibleRange)
+                        originConstraints.selectedRange.set(lower, upper)
+                        bottom_label.centerX = viewConstraints.selectedRange.center.toFloat()
+                        bottom_label.text = resources.getString(R.string.time_placeholder, originConstraints.selectedRange.width)
+                        left_label.text = resources.getString(R.string.time_placeholder, originConstraints.current - originConstraints.selectedRange.lower)
+                        right_label.text = resources.getString(R.string.time_placeholder, originConstraints.selectedRange.upper - originConstraints.current)
                         barWithLimit.invalidate()
                     }
                 }
@@ -105,6 +106,7 @@ class DoubleSeekBarLayout @JvmOverloads constructor(
 
     private fun translatePoint(x: Int, range: Range, translatedRange: Range): Int {
         return translatedRange.clamp((translatedRange.lower + translatedRange.width * (x - range.lower) / range.width))
+//        return (translatedRange.lower + translatedRange.width * (x - range.lower) / range.width)
     }
 
     companion object {

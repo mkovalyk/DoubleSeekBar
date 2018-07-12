@@ -1,7 +1,7 @@
 package com.application.seekbar
 
-import kotlin.properties.Delegates
-import kotlin.reflect.KProperty
+import kotlin.math.max
+import kotlin.math.min
 
 /**
  *
@@ -14,15 +14,9 @@ import kotlin.reflect.KProperty
  */
 class Range constructor(lower: Int, upper: Int) {
 
-    private val internalListener: (property: KProperty<*>, oldValue: Int, newValue: Int) -> Unit =
-            { _, _, _ ->
-                width = this.upper - this.lower
-                listener?.invoke(this)
-            }
-
-    var lower: Int by Delegates.observable(lower, internalListener)
+    var lower: Int = lower
         private set
-    var upper: Int  by Delegates.observable(upper, internalListener)
+    var upper: Int = upper
         private set
 
     var width: Int = 0
@@ -42,14 +36,17 @@ class Range constructor(lower: Int, upper: Int) {
     }
 
     fun shift(delta: Int) {
-        lower += delta
-        upper += delta
+        set(lower + delta, upper + delta)
     }
 
     fun set(lower: Int, upper: Int) {
         checkInvariance(lower, upper)
-        this.lower = lower
-        this.upper = upper
+        if (lower != this.lower || upper != this.upper) {
+            this.lower = lower
+            this.upper = upper
+            this.width = upper - lower
+            listener?.invoke(this)
+        }
     }
 
     fun shiftImmutable(delta: Int): Range {
@@ -95,13 +92,18 @@ class Range constructor(lower: Int, upper: Int) {
      * Changes current range to fit the range
      */
     fun clamp(range: Range) {
-        if (lower <= range.lower) {
-            this.lower = range.lower
-        }
-        if (upper >= range.upper) {
-            this.upper = range.upper
-        }
+        set(max(lower, range.lower), min(upper, range.upper))
+//        if (lower <= range.lower) {
+//            lower = range.lower
+//        }
+//        if (upper >= range.upper) {
+//            val upper = range.upper
+//        }
     }
+
+    val center
+        get() = (upper + lower) / 2
+
 
     override fun toString() = "Range[$lower: $upper]."
 

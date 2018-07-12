@@ -1,4 +1,4 @@
 <resources>
     <string name="app_name">SeekBar</string>
-    <string name="time_placeholder"><b>10</b> s</string>
+    <string name="time_placeholder"><b>%d</b> s</string>
 </resources>

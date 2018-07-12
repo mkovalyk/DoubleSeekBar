@@ -16,9 +16,9 @@ class Thumb @JvmOverloads constructor(
     var range: Range = Range.EMPTY
         set(value) {
             field = value
-            if (!field.contains(center)) {
-                center = field.clamp(center)
-                listener?.invoke(center)
+            if (!field.contains(centerX)) {
+                centerX = field.clamp(centerX)
+                listener?.invoke(centerX)
             }
         }
     var listener: ((Float) -> Unit)? = null
@@ -32,9 +32,9 @@ class Thumb @JvmOverloads constructor(
             }
             MotionEvent.ACTION_MOVE -> {
                 val delta = (prevX - event.rawX)
-                if (range.contains(center - delta)) {
-                    center -= delta
-                    listener?.invoke(center)
+                if (range.contains(centerX - delta)) {
+                    centerX -= delta
+                    listener?.invoke(centerX)
                     prevX = event.rawX
                 }
                 return true
@@ -42,10 +42,4 @@ class Thumb @JvmOverloads constructor(
         }
         return super.onTouchEvent(event)
     }
-
-    var center: Float
-        get() = x + width / 2
-        set(value) {
-            x = value - width / 2
-        }
 }
