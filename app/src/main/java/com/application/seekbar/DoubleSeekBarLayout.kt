@@ -2,9 +2,11 @@ package com.application.seekbar
 
 import android.content.Context
 import android.support.constraint.ConstraintLayout
+import android.text.SpannableStringBuilder
 import android.util.AttributeSet
 import android.util.Log
 import android.view.LayoutInflater
+import android.widget.TextView
 import kotlinx.android.synthetic.main.layout_double_seek_bar.view.*
 
 /**
@@ -70,9 +72,11 @@ class DoubleSeekBarLayout @JvmOverloads constructor(
                         val upper = translatePoint(newRange.upper, barWithLimit.viewRange, originConstraints.visibleRange)
                         originConstraints.selectedRange.set(lower, upper)
                         bottom_label.centerX = viewConstraints.selectedRange.center.toFloat()
-                        bottom_label.text = resources.getString(R.string.time_placeholder, originConstraints.selectedRange.width)
-                        left_label.text = resources.getString(R.string.time_placeholder, originConstraints.current - originConstraints.selectedRange.lower)
-                        right_label.text = resources.getString(R.string.time_placeholder, originConstraints.selectedRange.upper - originConstraints.current)
+
+                        setTime(originConstraints.selectedRange.width, bottom_label)
+                        setTime(originConstraints.current - originConstraints.selectedRange.lower, left_label)
+                        setTime(originConstraints.selectedRange.upper - originConstraints.current, right_label)
+
                         barWithLimit.invalidate()
                     }
                 }
@@ -80,6 +84,14 @@ class DoubleSeekBarLayout @JvmOverloads constructor(
                     barWithLimit.viewConstraints = it
                 }
         invalidate()
+    }
+
+    private fun setTime(time: Int, into: TextView) {
+        val endTime = SpannableStringBuilder()
+                .bold { append(time.toString()) }
+                .append(" ")
+                .append(resources.getString(R.string.time_unit))
+        into.text = endTime
     }
 
     private fun convertToXY(constraints: Constraints, viewRange: Range): Constraints {

@@ -25,7 +25,7 @@ class MainActivity : AppCompatActivity() {
 
         // in seconds
         val width = 60
-        val current = 100
+        val current = 15
         val selectedOffset = 5
 
         layout.post {

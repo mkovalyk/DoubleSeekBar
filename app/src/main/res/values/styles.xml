@@ -23,4 +23,9 @@
         <item name="progressSelected">@color/selectedColor</item>
         <item name="progressDisabled">@color/lineColor</item>
     </style>
+
+    <style name="IndicatorLabel">
+        <item name="android:textSize">11sp</item>
+        <item name="android:textColor">@android:color/white</item>
+    </style>
 </resources>
