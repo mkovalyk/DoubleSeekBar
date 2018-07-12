@@ -32,9 +32,10 @@ class Thumb @JvmOverloads constructor(
             }
             MotionEvent.ACTION_MOVE -> {
                 val delta = (prevX - event.rawX)
-                if (range.contains(centerX - delta)) {
-                    centerX -= delta
-                    listener?.invoke(centerX)
+                val newPosition = range.clamp(centerX - delta)
+                if (centerX != newPosition) {
+                    centerX = newPosition
+                    listener?.invoke(newPosition)
                     prevX = event.rawX
                 }
                 return true
