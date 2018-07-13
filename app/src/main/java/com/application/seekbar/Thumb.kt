@@ -18,10 +18,11 @@ class Thumb @JvmOverloads constructor(
             field = value
             if (!field.contains(centerX)) {
                 centerX = field.clamp(centerX)
-                listener?.invoke(centerX)
+                listener?.invoke(centerX, false)
             }
         }
-    var listener: ((Float) -> Unit)? = null
+    var listener: ((newValue: Float, byUser: Boolean) -> Unit)? = null
+
     private var prevX = 0f
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
@@ -35,7 +36,7 @@ class Thumb @JvmOverloads constructor(
                 val newPosition = range.clamp(centerX - delta)
                 if (centerX != newPosition) {
                     centerX = newPosition
-                    listener?.invoke(newPosition)
+                    listener?.invoke(newPosition, true)
                     prevX = event.rawX
                 }
                 return true

@@ -1,6 +1,7 @@
 package com.application.seekbar
 
 import android.util.Log
+import kotlin.math.min
 
 /**
  * Created on 06.07.18.
@@ -21,6 +22,7 @@ data class Constraints(
             allowedRange.clamp(totalRange)
             selectedRange.clamp(allowedRange)
             current = selectedRange.clamp(current)
+            minRange = min(minRange, selectedRange.width)
             Log.d("Constraints", "After: $this")
         } else {
             if (!totalRange.contains(allowedRange)) {
@@ -34,6 +36,9 @@ data class Constraints(
             }
             if (!selectedRange.contains(current)) {
                 throw IllegalStateException("Selected range $selectedRange should contains current value: $current")
+            }
+            if (minRange > selectedRange.width) {
+                throw IllegalStateException("MinRange: $minRange is bigger that width of selected area")
             }
         }
     }

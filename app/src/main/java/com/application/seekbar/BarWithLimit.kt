@@ -20,7 +20,7 @@ class BarWithLimit @JvmOverloads constructor(context: Context, attrs: AttributeS
     private val lineColor: Int
     private val selectedColor: Int
 
-    val viewRange: Range = Range(0, 1)
+    val viewRange = Range.EMPTY
 
     private var prevX = 0f
 

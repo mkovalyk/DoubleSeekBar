@@ -31,7 +31,7 @@ class Range constructor(lower: Int, upper: Int) {
 
     private fun checkInvariance(lower: Int, upper: Int) {
         if (lower > upper) {
-            throw IllegalStateException("Lower can not be bigger than upper")
+            throw IllegalStateException("Lower:$lower can not be bigger than upper:$upper")
         }
     }
 
@@ -108,6 +108,7 @@ class Range constructor(lower: Int, upper: Int) {
     override fun toString() = "Range[$lower: $upper]."
 
     companion object {
-        val EMPTY = Range(0, 1)
+        val EMPTY
+            get() = Range(0, 1)
     }
 }

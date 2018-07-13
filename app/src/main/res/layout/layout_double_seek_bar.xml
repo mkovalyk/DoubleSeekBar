@@ -10,7 +10,7 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <com.application.seekbar.BarWithLimit
-        android:id="@+id/barWithLimit"
+        android:id="@+id/bar_with_limit"
         style="@style/BarWithLimitStyle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -23,28 +23,28 @@
         app:layout_constraintStart_toStartOf="parent"/>
 
     <com.application.seekbar.Thumb
-        android:id="@+id/leftThumb"
+        android:id="@+id/left_thumb"
         android:layout_width="32dp"
         android:layout_height="32dp"
         android:layout_gravity="center_horizontal"
         android:layout_marginStart="64dp"
         android:padding="4dp"
         android:src="@drawable/ic_edit_tag_arrow_left"
-        app:layout_constraintBottom_toBottomOf="@+id/barWithLimit"
+        app:layout_constraintBottom_toBottomOf="@+id/bar_with_limit"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/barWithLimit"/>
+        app:layout_constraintTop_toTopOf="@+id/bar_with_limit"/>
 
     <com.application.seekbar.Thumb
-        android:id="@+id/rightThumb"
+        android:id="@+id/right_thumb"
         android:layout_width="32dp"
         android:layout_height="32dp"
         android:layout_gravity="center_horizontal"
         android:layout_marginEnd="16dp"
         android:padding="4dp"
         android:src="@drawable/ic_edit_tag_arrow_right"
-        app:layout_constraintBottom_toBottomOf="@+id/barWithLimit"
+        app:layout_constraintBottom_toBottomOf="@+id/bar_with_limit"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/barWithLimit"/>
+        app:layout_constraintTop_toTopOf="@+id/bar_with_limit"/>
 
     <ImageView
         android:id="@+id/imageView"
@@ -57,9 +57,9 @@
         style="@style/IndicatorLabel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:layout_constraintBottom_toTopOf="@+id/rightThumb"
-        app:layout_constraintEnd_toEndOf="@+id/rightThumb"
-        app:layout_constraintStart_toStartOf="@+id/rightThumb"
+        app:layout_constraintBottom_toTopOf="@+id/right_thumb"
+        app:layout_constraintEnd_toEndOf="@+id/right_thumb"
+        app:layout_constraintStart_toStartOf="@+id/right_thumb"
         tools:text="10 s"
         />
 
@@ -81,21 +81,21 @@
         style="@style/IndicatorLabel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:layout_constraintBottom_toTopOf="@+id/leftThumb"
-        app:layout_constraintEnd_toEndOf="@+id/leftThumb"
-        app:layout_constraintStart_toStartOf="@+id/leftThumb"
+        app:layout_constraintBottom_toTopOf="@+id/left_thumb"
+        app:layout_constraintEnd_toEndOf="@+id/left_thumb"
+        app:layout_constraintStart_toStartOf="@+id/left_thumb"
         tools:text="5 s"
         />
 
     <ImageView
-        android:id="@+id/tagIcon"
+        android:id="@+id/tag_icon"
         android:layout_width="32dp"
         android:layout_height="32dp"
         android:layout_marginTop="32dp"
         android:src="@drawable/ic_tag"
-        app:layout_constraintBottom_toTopOf="@+id/barWithLimit"
-        app:layout_constraintEnd_toEndOf="@+id/barWithLimit"
-        app:layout_constraintStart_toStartOf="@+id/barWithLimit"
+        app:layout_constraintBottom_toTopOf="@+id/bar_with_limit"
+        app:layout_constraintEnd_toEndOf="@+id/bar_with_limit"
+        app:layout_constraintStart_toStartOf="@+id/bar_with_limit"
         app:layout_constraintTop_toTopOf="parent"/>
 
     <!--</android.support.constraint.ConstraintLayout>-->
