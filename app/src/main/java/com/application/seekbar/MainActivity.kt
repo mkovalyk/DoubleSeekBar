@@ -25,7 +25,7 @@ class MainActivity : AppCompatActivity() {
 
         // in seconds
         val width = 60 * 1000
-        val current = 15 * 1000
+        val current = 2 * 1000
         val selectedOffset = 5 * 1000
         val minRange = 4 * 1000
 

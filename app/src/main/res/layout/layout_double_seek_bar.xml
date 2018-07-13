@@ -16,7 +16,7 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="24dp"
         android:layout_marginEnd="8dp"
-        android:layout_marginStart="16dp"
+        android:layout_marginStart="8dp"
         android:padding="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -28,6 +28,7 @@
         android:layout_height="32dp"
         android:layout_gravity="center_horizontal"
         android:layout_marginStart="64dp"
+        android:elevation="5dp"
         android:padding="4dp"
         android:src="@drawable/ic_edit_tag_arrow_left"
         app:layout_constraintBottom_toBottomOf="@+id/bar_with_limit"
@@ -40,6 +41,7 @@
         android:layout_height="32dp"
         android:layout_gravity="center_horizontal"
         android:layout_marginEnd="16dp"
+        android:elevation="5dp"
         android:padding="4dp"
         android:src="@drawable/ic_edit_tag_arrow_right"
         app:layout_constraintBottom_toBottomOf="@+id/bar_with_limit"
@@ -69,8 +71,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginStart="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -92,11 +92,22 @@
         android:layout_width="32dp"
         android:layout_height="32dp"
         android:layout_marginTop="32dp"
+        android:scaleType="centerInside"
         android:src="@drawable/ic_tag"
         app:layout_constraintBottom_toTopOf="@+id/bar_with_limit"
         app:layout_constraintEnd_toEndOf="@+id/bar_with_limit"
         app:layout_constraintStart_toStartOf="@+id/bar_with_limit"
         app:layout_constraintTop_toTopOf="parent"/>
 
+    <ImageView
+        android:id="@+id/vertical_line"
+        android:layout_width="3dp"
+        android:layout_height="18dp"
+        android:background="@drawable/vertical_line"
+        android:elevation="4dp"
+        app:layout_constraintBottom_toBottomOf="@+id/bar_with_limit"
+        app:layout_constraintEnd_toEndOf="@+id/bar_with_limit"
+        app:layout_constraintStart_toStartOf="@+id/bar_with_limit"
+        app:layout_constraintTop_toTopOf="@+id/bar_with_limit"/>
     <!--</android.support.constraint.ConstraintLayout>-->
 </merge>

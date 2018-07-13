@@ -82,6 +82,8 @@ class DoubleSeekBarLayout @JvmOverloads constructor(
                     right_thumb.centerX = selectedRange.upper.toFloat()
 
                     constraints?.updateTextLabels()
+                    tag_icon.centerX = current.toFloat()
+                    vertical_line.centerX = current.toFloat()
                 }
                 .also {
                     it.selectedRange.listener = ::updateSelectedRange
