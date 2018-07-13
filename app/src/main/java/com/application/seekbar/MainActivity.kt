@@ -21,17 +21,18 @@ class MainActivity : AppCompatActivity() {
         baseLayout.addView(layout)
 
         // video - 5 minutes
-        val videoDuration = 300
+        val videoDuration = 300 * 1000
 
         // in seconds
-        val width = 60
-        val current = 15
-        val selectedOffset = 5
+        val width = 60 * 1000
+        val current = 15 * 1000
+        val selectedOffset = 5 * 1000
+        val minRange = 4 * 1000
 
         layout.post {
             layout.constraints = Constraints(Range(0, videoDuration), Range(-width / 2, videoDuration + width / 2),
                     Range(current - selectedOffset, current + selectedOffset), current,
-                    Range(current - width / 2, current + width / 2), 4, true)
+                    Range(current - width / 2, current + width / 2), minRange, true, 0.001f)
                     .apply {
                         selectedRange.listener = { range ->
                             Log.d(TAG, "SelectedRange Changed: $range")

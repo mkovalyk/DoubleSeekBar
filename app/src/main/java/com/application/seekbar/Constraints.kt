@@ -13,7 +13,8 @@ data class Constraints(
         var current: Int,
         var visibleRange: Range,
         var minRange: Int = 0,
-        val tolerate: Boolean = false) {
+        val tolerate: Boolean = false,
+        val multiplier: Float = 1.0f) {
 
     init {
         if (tolerate) {

@@ -103,9 +103,9 @@ class DoubleSeekBarLayout @JvmOverloads constructor(
     }
 
     private fun Constraints.updateTextLabels() {
-        setTime(selectedRange.width, bottom_label)
-        setTime(current - selectedRange.lower, left_label)
-        setTime(selectedRange.upper - current, right_label)
+        setTime(selectedRange.width.times(multiplier), bottom_label)
+        setTime((current - selectedRange.lower).times(multiplier), left_label)
+        setTime((selectedRange.upper - current).times(multiplier), right_label)
 
         viewConstraints?.apply {
             bottom_label.centerX = selectedRange.center.toFloat()
@@ -116,9 +116,9 @@ class DoubleSeekBarLayout @JvmOverloads constructor(
         translateIfTextLabelsOverlapsWithIndicator()
     }
 
-    private fun setTime(time: Int, into: TextView) {
+    private fun setTime(time: Float, into: TextView) {
         val endTime = SpannableStringBuilder()
-                .bold { append(time.toString()) }
+                .bold { append(String.format("%.1f",time)) }
                 .append(" ")
                 .append(resources.getString(R.string.time_unit))
         into.text = endTime
