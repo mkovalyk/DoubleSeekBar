@@ -1,16 +1,3 @@
-package com.application.seekbar
-
-import android.graphics.Typeface.BOLD
-import android.graphics.Typeface.ITALIC
-import android.support.annotation.ColorInt
-import android.text.SpannableStringBuilder
-import android.text.Spanned.SPAN_INCLUSIVE_EXCLUSIVE
-import android.text.SpannedString
-import android.text.style.*
-
-/**
- * Created on 12.07.18.
- */
 /*
  * Copyright (C) 2017 The Android Open Source Project
  *
@@ -26,8 +13,21 @@ import android.text.style.*
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+@file:Suppress("unused")
+
+package com.application.seekbar
+
+import android.graphics.Typeface.BOLD
+import android.graphics.Typeface.ITALIC
+import android.support.annotation.ColorInt
+import android.text.SpannableStringBuilder
+import android.text.Spanned.SPAN_INCLUSIVE_EXCLUSIVE
+import android.text.SpannedString
+import android.text.style.*
 
 /**
+ * Android KTX extension for easier building of the rich text.
+ *
  * Builds new string by populating a newly created [SpannableStringBuilder] using the provided
  * [builderAction] and then converting it to [SpannedString].
  */

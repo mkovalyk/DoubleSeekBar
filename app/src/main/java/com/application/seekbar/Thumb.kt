@@ -1,12 +1,13 @@
 package com.application.seekbar
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.widget.ImageView
 
 /**
- * Class for displaying
+ * Class for displaying indicator of range
  *
  * Created on 05.07.18.
  */
@@ -25,6 +26,9 @@ class Thumb @JvmOverloads constructor(
 
     private var prevX = 0f
 
+
+    // no need for clicks.. At least for now..
+    @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent): Boolean {
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {

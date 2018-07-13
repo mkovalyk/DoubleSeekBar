@@ -49,10 +49,6 @@ class Range constructor(lower: Int, upper: Int) {
         }
     }
 
-    fun shiftImmutable(delta: Int): Range {
-        return Range(lower + delta, upper + delta)
-    }
-
     fun contains(value: Int): Boolean {
         return value in lower..upper
     }
@@ -93,12 +89,6 @@ class Range constructor(lower: Int, upper: Int) {
      */
     fun clamp(range: Range) {
         set(max(lower, range.lower), min(upper, range.upper))
-//        if (lower <= range.lower) {
-//            lower = range.lower
-//        }
-//        if (upper >= range.upper) {
-//            val upper = range.upper
-//        }
     }
 
     val center

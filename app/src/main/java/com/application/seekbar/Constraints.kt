@@ -1,9 +1,10 @@
 package com.application.seekbar
 
-import android.util.Log
 import kotlin.math.min
 
 /**
+ * Container which contains a bunch of object which describe values that is used to draw [DoubleSeekBarLayout]
+ *
  * Created on 06.07.18.
  */
 data class Constraints(
@@ -18,13 +19,13 @@ data class Constraints(
 
     init {
         if (tolerate) {
-            Log.d("Constraints", "Before: $this")
+//            Log.d("Constraints", "Before: $this")
             visibleRange.clamp(totalRange)
             allowedRange.clamp(totalRange)
             selectedRange.clamp(allowedRange)
             current = selectedRange.clamp(current)
             minRange = min(minRange, selectedRange.width)
-            Log.d("Constraints", "After: $this")
+//            Log.d("Constraints", "After: $this")
         } else {
             if (!totalRange.contains(allowedRange)) {
                 throw IllegalStateException("Total range ${totalRange}should be equal to or bigger than allowed range: $allowedRange")

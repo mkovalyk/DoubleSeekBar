@@ -4,7 +4,6 @@ import android.content.Context
 import android.support.constraint.ConstraintLayout
 import android.text.SpannableStringBuilder
 import android.util.AttributeSet
-import android.util.Log
 import android.view.LayoutInflater
 import android.widget.TextView
 import kotlinx.android.synthetic.main.layout_double_seek_bar.view.*
@@ -12,6 +11,8 @@ import kotlin.math.max
 import kotlin.math.min
 
 /**
+ * View which draws whole component for selecting range
+ *
  * Created on 06.07.18.
  */
 class DoubleSeekBarLayout @JvmOverloads constructor(
@@ -49,6 +50,7 @@ class DoubleSeekBarLayout @JvmOverloads constructor(
         viewConstraints?.apply {
             val intValue = newValue.toInt()
             selectedRange.set(selectedRange.lower, intValue)
+            // update minimum value for left thumb
             val value = min(current, intValue - minRange)
             left_thumb.range.set(left_thumb.range.lower, value)
         }
@@ -58,6 +60,7 @@ class DoubleSeekBarLayout @JvmOverloads constructor(
         viewConstraints?.apply {
             val intValue = newValue.toInt()
             selectedRange.set(intValue, selectedRange.upper)
+            // update minimum value for right thumb
             val value = max(current, intValue + minRange)
             right_thumb.range.set(value, right_thumb.range.upper)
         }
@@ -67,11 +70,9 @@ class DoubleSeekBarLayout @JvmOverloads constructor(
         val distanceToLeft = tag_icon.x - left_label.width - left_label.x
         val distanceToRight = right_label.x - tag_icon.x - tag_icon.width
         tag_icon.translationY = minOf(0f, distanceToLeft, distanceToRight)
-        Log.d(TAG, "translateIfTextLabelsOverlapsWithIndicator: ${tag_icon.translationY}")
     }
 
     private fun updateCharacteristics(newValue: Constraints) {
-        Log.d(TAG, "updateCharacteristics: $newValue")
         viewConstraints = convertToXY(newValue, bar_with_limit.viewRange)
                 .apply {
                     left_thumb.range = Range(allowedRange.clamp(visibleRange.lower), current)
@@ -81,7 +82,6 @@ class DoubleSeekBarLayout @JvmOverloads constructor(
                     right_thumb.centerX = selectedRange.upper.toFloat()
 
                     constraints?.updateTextLabels()
-                    Log.d(TAG, "left: ${left_thumb.range}. right: ${right_thumb.range}")
                 }
                 .also {
                     it.selectedRange.listener = ::updateSelectedRange
@@ -118,7 +118,7 @@ class DoubleSeekBarLayout @JvmOverloads constructor(
 
     private fun setTime(time: Float, into: TextView) {
         val endTime = SpannableStringBuilder()
-                .bold { append(String.format("%.1f",time)) }
+                .bold { append(String.format("%.1f", time)) }
                 .append(" ")
                 .append(resources.getString(R.string.time_unit))
         into.text = endTime
@@ -126,7 +126,6 @@ class DoubleSeekBarLayout @JvmOverloads constructor(
 
     private fun convertToXY(constraints: Constraints, viewRange: Range): Constraints {
         with(constraints) {
-            Log.d(TAG, "convertToXY: Range:$viewRange. Constraints: $constraints")
             val allowedRange = Range(translatePoint(allowedRange.lower, visibleRange, viewRange),
                     translatePoint(allowedRange.upper, visibleRange, viewRange))
 
@@ -148,10 +147,5 @@ class DoubleSeekBarLayout @JvmOverloads constructor(
 
     private fun translatePoint(x: Int, range: Range, translatedRange: Range): Int {
         return translatedRange.clamp((translatedRange.lower + translatedRange.width * (x - range.lower) / range.width))
-//        return (translatedRange.lower + translatedRange.width * (x - range.lower) / range.width)
-    }
-
-    companion object {
-        const val TAG = "DoubleSeekBarLayout"
     }
 }
