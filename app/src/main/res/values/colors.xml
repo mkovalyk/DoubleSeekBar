@@ -7,4 +7,6 @@
     <color name="progressBackgroundColor">#99606060</color>
     <color name="lineColor">#ffd38b</color>
     <color name="selectedColor">#38a0b4</color>
+
+    <color name="general_blue_gray">#93A8BA</color>
 </resources>

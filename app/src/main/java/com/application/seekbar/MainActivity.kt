@@ -1,6 +1,10 @@
 package com.application.seekbar
 
+import android.content.Context
 import android.os.Bundle
+import android.support.annotation.DrawableRes
+import android.support.graphics.drawable.VectorDrawableCompat
+import android.support.graphics.drawable.VectorDrawableCompat.create
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.Gravity.BOTTOM
@@ -38,7 +42,22 @@ class MainActivity : AppCompatActivity() {
                             Log.d(TAG, "SelectedRange Changed: $range")
                         }
                     }
+            val vectorDrawable = getUniqueVectorDrawable(context = this, sourceId = R.drawable.icv_event_sport_type_field_hockey)
+            layout.tagIcon.setImageDrawable(vectorDrawable)
+            layout.tagIcon.setBackgroundResource(R.drawable.ic_tag)
         }
+    }
+
+    /**
+     * Generate new vector drawable.
+     * WARNING: Method doesn't cache result as [.getVectorDrawable]
+     */
+    @Synchronized
+    fun getUniqueVectorDrawable(context: Context, @DrawableRes sourceId: Int): VectorDrawableCompat {
+        val resources = context.resources
+        val vectorDrawable = create(resources, sourceId, context.theme)
+        vectorDrawable!!.mutate() //Disable default caching present in API >= 24
+        return vectorDrawable
     }
 
     companion object {
