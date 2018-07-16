@@ -50,9 +50,10 @@ class DoubleSeekBarLayout @JvmOverloads constructor(
         viewConstraints?.apply {
             val intValue = newValue.toInt()
             selectedRange.set(selectedRange.lower, intValue)
-            // update minimum value for left thumb
+            // update maximal value for left thumb
             val value = min(current, intValue - minRange)
-            left_thumb.range.set(left_thumb.range.lower, value)
+            val lower = left_thumb.range.lower
+            left_thumb.range.set(lower, max(lower, value))
         }
     }
 
@@ -60,9 +61,10 @@ class DoubleSeekBarLayout @JvmOverloads constructor(
         viewConstraints?.apply {
             val intValue = newValue.toInt()
             selectedRange.set(intValue, selectedRange.upper)
-            // update minimum value for right thumb
+            // update minimal value for right thumb
             val value = max(current, intValue + minRange)
-            right_thumb.range.set(value, right_thumb.range.upper)
+            val upper = right_thumb.range.upper
+            right_thumb.range.set(min(upper, value), upper)
         }
     }
 
@@ -97,10 +99,14 @@ class DoubleSeekBarLayout @JvmOverloads constructor(
             val lower = translatePoint(newRange.lower, bar_with_limit.viewRange, visibleRange)
             val upper = translatePoint(newRange.upper, bar_with_limit.viewRange, visibleRange)
             selectedRange.set(lower, upper)
-
             updateTextLabels()
 
             bar_with_limit.invalidate()
+        }
+        viewConstraints?.apply {
+            // add initial constraints for left and right thumbs
+            leftThumbMoved(selectedRange.lower.toFloat())
+            rightThumbMoved(selectedRange.upper.toFloat())
         }
     }
 
@@ -117,6 +123,10 @@ class DoubleSeekBarLayout @JvmOverloads constructor(
         left_label.centerX = left_thumb.centerX
         translateIfTextLabelsOverlapsWithIndicator()
     }
+
+    // Getter for tag icon. It may change in future so there is no reason to use tag_icon directly
+    val tagIcon
+        get() = tag_icon
 
     private fun setTime(time: Float, into: TextView) {
         val endTime = SpannableStringBuilder()
