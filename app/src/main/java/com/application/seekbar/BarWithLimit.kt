@@ -103,7 +103,7 @@ class BarWithLimit @JvmOverloads constructor(context: Context, attrs: AttributeS
                     MeasureSpec.AT_MOST -> Math.min(evaluatedHeight, heightSize)
                     MeasureSpec.UNSPECIFIED -> evaluatedHeight
                     else -> {
-                        throw  IllegalStateException("WidthMode cannot be found $heightMode")
+                        throw  IllegalStateException("HeightMode cannot be found $heightMode")
                     }
                 }
 
@@ -115,7 +115,7 @@ class BarWithLimit @JvmOverloads constructor(context: Context, attrs: AttributeS
         super.onLayout(changed, left, top, right, bottom)
         // only after view is laid out margins are available
         val marginStart = x.toInt()
-        viewRange.set(marginStart + paddingStart, marginStart + measuredWidth - paddingEnd - paddingStart)
+        viewRange.set(marginStart + paddingStart, marginStart + measuredWidth - paddingEnd)
     }
 
     override fun onDraw(canvas: Canvas) {
