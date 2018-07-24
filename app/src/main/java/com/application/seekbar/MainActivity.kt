@@ -25,11 +25,11 @@ class MainActivity : AppCompatActivity() {
         baseLayout.addView(layout)
 
         // video - 5 minutes
-        val videoDuration = 300 * 1000
+        val videoDuration = 100 * 1000
 
         // in seconds
         val width = 60 * 1000
-        val current = 2 * 1000
+        val current = 80 * 1000
         val selectedOffset = 5 * 1000
         val minRange = 4 * 1000
 

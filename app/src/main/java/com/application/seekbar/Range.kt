@@ -29,6 +29,10 @@ class Range constructor(lower: Int, upper: Int) {
         this.width = upper - lower
     }
 
+    fun isEmpty(): Boolean {
+        return lower == upper
+    }
+
     private fun checkInvariance(lower: Int, upper: Int) {
         if (lower > upper) {
             throw IllegalStateException("Lower:$lower can not be bigger than upper:$upper")
@@ -37,6 +41,23 @@ class Range constructor(lower: Int, upper: Int) {
 
     fun shift(delta: Int) {
         set(lower + delta, upper + delta)
+    }
+
+    fun shiftImmutable(delta: Int): Range {
+        return Range(lower + delta, upper + delta)
+    }
+
+    fun overlap(range: Range): Range? {
+        if (this.contains(range)) {
+            return Range(range.lower, range.upper)
+        } else if (range.contains(this)) {
+            return Range(this.lower, this.upper)
+        }
+        // ranges don't overlap
+        if (this.upper < range.lower || this.lower > range.upper) {
+            return null
+        }
+        return Range(max(this.lower, range.lower), min(this.upper, range.upper))
     }
 
     fun set(lower: Int, upper: Int) {
@@ -88,7 +109,13 @@ class Range constructor(lower: Int, upper: Int) {
      * Changes current range to fit the range
      */
     fun clamp(range: Range) {
-        set(max(lower, range.lower), min(upper, range.upper))
+        val lower = max(lower, range.lower)
+        val upper = min(upper, range.upper)
+        if (lower > upper) {
+            set(lower, lower)
+        } else {
+            set(lower, upper)
+        }
     }
 
     val center
@@ -96,6 +123,24 @@ class Range constructor(lower: Int, upper: Int) {
 
 
     override fun toString() = "Range[$lower: $upper]."
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as Range
+
+        if (lower != other.lower) return false
+        if (upper != other.upper) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = lower
+        result = 31 * result + upper
+        return result
+    }
 
     companion object {
         val EMPTY

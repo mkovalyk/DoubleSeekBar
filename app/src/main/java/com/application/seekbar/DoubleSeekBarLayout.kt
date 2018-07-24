@@ -4,6 +4,7 @@ import android.content.Context
 import android.support.constraint.ConstraintLayout
 import android.text.SpannableStringBuilder
 import android.util.AttributeSet
+import android.util.Log
 import android.view.LayoutInflater
 import android.widget.ImageView
 import android.widget.TextView
@@ -79,7 +80,7 @@ class DoubleSeekBarLayout @JvmOverloads constructor(
         viewConstraints = convertToXY(newValue, bar_with_limit.viewRange)
                 .also {
                     it.selectedRange.listener = ::updateSelectedRange
-                    bar_with_limit.viewConstraints = it
+                    bar_with_limit.abstractConstraints = it
                 }
 //        Log.d(TAG, "updateConstraints: viewConstraints:$viewConstraints")
         // post to make sure all layout operations are already performed
@@ -146,29 +147,38 @@ class DoubleSeekBarLayout @JvmOverloads constructor(
 
     private fun convertToXY(constraints: Constraints, viewRange: Range): Constraints {
         with(constraints) {
-            val allowedRange = Range(translatePoint(allowedRange.lower, visibleRange, viewRange),
-                    translatePoint(allowedRange.upper, visibleRange, viewRange))
+            val allowedRange = Range(translatePointNoClamping(allowedRange.lower, visibleRange, viewRange),
+                    translatePointNoClamping(allowedRange.upper, visibleRange, viewRange))
 
-            val totalRange = Range(translatePoint(totalRange.lower, visibleRange, viewRange),
-                    translatePoint(totalRange.upper, visibleRange, viewRange))
+            val totalRange = Range(translatePointNoClamping(totalRange.lower, visibleRange, viewRange),
+                    translatePointNoClamping(totalRange.upper, visibleRange, viewRange))
 
-            val selectedRange = Range(translatePoint(selectedRange.lower, visibleRange, viewRange),
-                    translatePoint(selectedRange.upper, visibleRange, viewRange))
+            val selectedRange = Range(translatePointNoClamping(selectedRange.lower, visibleRange, viewRange),
+                    translatePointNoClamping(selectedRange.upper, visibleRange, viewRange))
 
-            val current = translatePoint(current, visibleRange, viewRange)
+            val current = translatePointNoClamping(current, visibleRange, viewRange)
 
-            val range = Range(translatePoint(visibleRange.lower, visibleRange, viewRange),
-                    translatePoint(visibleRange.upper, visibleRange, viewRange))
+            val range = Range(translatePointNoClamping(visibleRange.lower, visibleRange, viewRange),
+                    translatePointNoClamping(visibleRange.upper, visibleRange, viewRange))
 
             val minDuration = minRange * viewRange.width / visibleRange.width
-            return Constraints(allowedRange, totalRange, selectedRange, current, range, minDuration, true)
+            val result = Constraints(allowedRange, totalRange, selectedRange, current, range, minDuration, true)
+            Log.d(TAG, "convertToXY: Result: $result")
+            return result
         }
     }
 
     private fun translatePoint(x: Int, range: Range, translatedRange: Range): Int {
         // converting to long to prevent overflows
         val result = translatedRange.clamp((translatedRange.lower + translatedRange.width.toLong() * (x - range.lower) / range.width).toInt())
-//        Log.d(TAG, "translatePoint: $x from $range to $translatedRange. Result $result")
+        Log.d(TAG, "translatePoint: $x from $range to $translatedRange. Result $result")
+        return result
+    }
+
+    private fun translatePointNoClamping(x: Int, range: Range, translatedRange: Range): Int {
+        // converting to long to prevent overflows
+        val result = (translatedRange.width.toLong() * x / range.width).toInt()
+        Log.d(TAG, "translatePointNoClamping: $x from $range to $translatedRange. Result $result")
         return result
     }
 
