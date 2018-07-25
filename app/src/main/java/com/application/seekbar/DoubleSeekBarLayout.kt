@@ -45,6 +45,7 @@ class DoubleSeekBarLayout @JvmOverloads constructor(
         bar_with_limit.currentListener = {
             val value = translatePointNoClamping(it, bar_with_limit.abstractConstraints.visibleRange, constraints!!.visibleRange)
             text_value.text = value.toString()
+            updateMaxRangesForThumbs()
         }
     }
 
@@ -73,6 +74,13 @@ class DoubleSeekBarLayout @JvmOverloads constructor(
             val value = max(current, intValue + minRange)
             val upper = right_thumb.range.upper
             right_thumb.range.set(min(upper, value), upper)
+        }
+    }
+
+    private fun updateMaxRangesForThumbs() {
+        viewConstraints?.apply {
+            right_thumb.range.set(right_thumb.range.lower, allowedRange.upper)
+            left_thumb.range.set(allowedRange.lower, left_thumb.range.upper)
         }
     }
 
