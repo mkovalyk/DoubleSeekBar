@@ -44,9 +44,22 @@ class BarWithLimit @JvmOverloads constructor(context: Context, attrs: AttributeS
      * Ranges of views
      */
     var abstractConstraints: Constraints by Delegates.observable(Constraints.EMPTY) { _, _, newValue ->
-        val lower = viewRange.clamp(newValue.visibleRange.lower).toFloat()
-        val upper = viewRange.clamp(newValue.visibleRange.upper).toFloat()
+        updateTranslatedConstraints(newValue)
     }
+
+    private fun updateTranslatedConstraints(newValue: Constraints) {
+        val offset = -newValue.visibleRange.lower
+        with(newValue) {
+            translatedConstraints = Constraints(allowedRange.shiftImmutable(offset),
+                    totalRange.shiftImmutable(offset),
+                    selectedRange.shiftImmutable(offset), current + offset, visibleRange.shiftImmutable(offset),
+                    minRange, tolerate, multiplier)
+            Log.d("BarWithLimit", "TranslatedConstraints: $translatedConstraints" +
+                    "\n -----------------------------------------------")
+        }
+    }
+
+    var translatedConstraints = Constraints.EMPTY
 
     private val selectedPaint by lazy {
         Paint().apply {
@@ -73,30 +86,22 @@ class BarWithLimit @JvmOverloads constructor(context: Context, attrs: AttributeS
             clipPath(path)
             drawColor(backgroundColor)
 
-            with(abstractConstraints) {
-
+            with(translatedConstraints) {
                 val bitmapVerticalOffset = (viewHeight - pattern.height) / 2
-                val horizontalOffset = visibleRange.lower % pattern.width.toFloat()
-                val backgroundRange = allowedRange.shiftImmutable(-visibleRange.lower).apply { clamp(viewRange) }
+                val horizontalOffset = abstractConstraints.visibleRange.lower % pattern.width.toFloat()
+                val backgroundRange = allowedRange.apply { clamp(viewRange) }
 
                 save()
-                clipRect(backgroundRange.lower.toFloat(), 0f, backgroundRange.upper.toFloat() - horizontalOffset, viewHeight)
+                clipRect(backgroundRange.lower.toFloat(), 0f, backgroundRange.upper.toFloat(), viewHeight)
                 translate(-horizontalOffset, bitmapVerticalOffset)
                 drawRect(viewRange.lower.toFloat(), 0f,
-                        viewRange.upper.toFloat(),
+                        viewRange.upper.toFloat() - if (horizontalOffset > 0) -horizontalOffset else horizontalOffset,
                         pattern.height.toFloat(), backgroundPaint)
                 restore()
 
-                val startDisabled = Range(totalRange.lower, allowedRange.lower)
-                        .apply {
-                            shift(-visibleRange.lower)
-                            clamp(viewRange)
-                        }
-                val endDisabled = Range(allowedRange.upper, totalRange.upper)
-                        .apply {
-                            shift(-visibleRange.lower)
-                            clamp(viewRange)
-                        }
+                val startDisabled = Range(totalRange.lower, allowedRange.lower).clamp(viewRange)
+                val endDisabled = Range(allowedRange.upper, totalRange.upper).clamp(viewRange)
+//                Log.d("Draw", "drawBackground: Start: $startDisabled. End: $endDisabled")
                 drawDisabledArea(startDisabled)
                 drawDisabledArea(endDisabled)
             }
@@ -119,11 +124,11 @@ class BarWithLimit @JvmOverloads constructor(context: Context, attrs: AttributeS
         with(canvas) {
             save()
             clipPath(path)
-
-            with(abstractConstraints) {
-                val left = viewRange.clamp(selectedRange.lower - visibleRange.lower).toFloat()
-                val right = viewRange.clamp(selectedRange.upper.toFloat() - visibleRange.lower)
+            with(translatedConstraints) {
+                val left = viewRange.clamp(selectedRange.lower).toFloat()
+                val right = viewRange.clamp(selectedRange.upper.toFloat())
                 drawRect(left, 0f, right, viewHeight, selectedPaint)
+                Log.d("Draw", "drawSelected: Left: $left. Right: $right")
             }
             restore()
         }
@@ -144,12 +149,16 @@ class BarWithLimit @JvmOverloads constructor(context: Context, attrs: AttributeS
                 if (Math.abs(delta) > threshold) {
                     with(abstractConstraints) {
                         val visibleRangeUpdated = visibleRange.shiftImmutable(delta)
-                        if (totalRange.contains(visibleRangeUpdated)) {
+                        val selectedRangeUpdated = selectedRange.shiftImmutable(delta)
+                        if (totalRange.contains(visibleRangeUpdated) && allowedRange.contains(selectedRangeUpdated)) {
                             visibleRange.shift(delta)
                             selectedRange.shift(delta)
                             current += delta
-                            Log.d("BarWithLimit", "onTouchEvent: delta $delta. Total range: $totalRange." +
+//                            translatedConstraints.visibleRange.shift(delta)
+//                            translatedConstraints.selectedRange.shift(delta)
+                            Log.d("BarWithLimit", "onTouchEvent: delta $delta. Total range: $abstractConstraints." +
                                     "Visible: $visibleRangeUpdated + current: $current")
+
                             invalidate()
                         }
                     }
@@ -191,6 +200,7 @@ class BarWithLimit @JvmOverloads constructor(context: Context, attrs: AttributeS
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
+        updateTranslatedConstraints(abstractConstraints)
         path.rewind()
         path.addRoundRect(clipRect, viewHeight / 2f, viewHeight / 2f, Path.Direction.CCW)
 

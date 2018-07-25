@@ -39,8 +39,9 @@ class Range constructor(lower: Int, upper: Int) {
         }
     }
 
-    fun shift(delta: Int) {
+    fun shift(delta: Int): Range {
         set(lower + delta, upper + delta)
+        return this
     }
 
     fun shiftImmutable(delta: Int): Range {
@@ -108,13 +109,24 @@ class Range constructor(lower: Int, upper: Int) {
     /**
      * Changes current range to fit the range
      */
-    fun clamp(range: Range) {
+    fun clamp(range: Range): Range {
         val lower = max(lower, range.lower)
         val upper = min(upper, range.upper)
         if (lower > upper) {
             set(lower, lower)
         } else {
             set(lower, upper)
+        }
+        return this
+    }
+
+    fun clampImmutable(range: Range): Range {
+        val lower = max(lower, range.lower)
+        val upper = min(upper, range.upper)
+        if (lower > upper) {
+            return Range(lower, lower)
+        } else {
+            return Range(lower, upper)
         }
     }
 
@@ -141,6 +153,7 @@ class Range constructor(lower: Int, upper: Int) {
         result = 31 * result + upper
         return result
     }
+
 
     companion object {
         val EMPTY

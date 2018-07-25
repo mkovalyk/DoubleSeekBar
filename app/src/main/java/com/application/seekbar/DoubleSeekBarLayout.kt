@@ -31,15 +31,15 @@ class DoubleSeekBarLayout @JvmOverloads constructor(
     init {
         LayoutInflater.from(context).inflate(R.layout.layout_double_seek_bar, this)
         left_thumb.listener = { newValue, byUser ->
-            if (byUser) {
-                leftThumbMoved(newValue)
-            }
+            //            if (byUser) {
+            leftThumbMoved(newValue, byUser)
+//            }
         }
 
         right_thumb.listener = { newValue, byUser ->
-            if (byUser) {
-                rightThumbMoved(newValue)
-            }
+            //            if (byUser) {
+            rightThumbMoved(newValue, byUser)
+//            }
         }
         bar_with_limit.viewRange.listener = { _ ->
             if (constraints != null) {
@@ -48,10 +48,12 @@ class DoubleSeekBarLayout @JvmOverloads constructor(
         }
     }
 
-    private fun rightThumbMoved(newValue: Float) {
+    private fun rightThumbMoved(newValue: Float, byUser: Boolean) {
         viewConstraints?.apply {
             val intValue = newValue.toInt()
-            selectedRange.set(selectedRange.lower, intValue)
+            if (byUser) {
+                selectedRange.set(selectedRange.lower, intValue)
+            }
             // update maximal value for left thumb
             val value = min(current, intValue - minRange)
             val lower = left_thumb.range.lower
@@ -59,10 +61,12 @@ class DoubleSeekBarLayout @JvmOverloads constructor(
         }
     }
 
-    private fun leftThumbMoved(newValue: Float) {
+    private fun leftThumbMoved(newValue: Float, byUser: Boolean) {
         viewConstraints?.apply {
             val intValue = newValue.toInt()
-            selectedRange.set(intValue, selectedRange.upper)
+            if (byUser) {
+                selectedRange.set(intValue, selectedRange.upper)
+            }
             // update minimal value for right thumb
             val value = max(current, intValue + minRange)
             val upper = right_thumb.range.upper
@@ -77,11 +81,9 @@ class DoubleSeekBarLayout @JvmOverloads constructor(
     }
 
     private fun updateConstraints(newValue: Constraints) {
-        viewConstraints = convertToXY(newValue, bar_with_limit.viewRange)
-                .also {
-                    it.selectedRange.listener = ::updateSelectedRange
-                    bar_with_limit.abstractConstraints = it
-                }
+        bar_with_limit.abstractConstraints = convertToXY(newValue, bar_with_limit.viewRange)
+        bar_with_limit.abstractConstraints.selectedRange.listener = ::updateSelectedRange
+        viewConstraints = bar_with_limit.translatedConstraints
 //        Log.d(TAG, "updateConstraints: viewConstraints:$viewConstraints")
         // post to make sure all layout operations are already performed
         post {
@@ -100,12 +102,13 @@ class DoubleSeekBarLayout @JvmOverloads constructor(
     }
 
     private fun updateSelectedRange(newRange: Range) {
+        Log.d(TAG, "updateSelectedRange: $newRange")
         with(constraints!!) {
             // convert to origin coordinate
-            val lower = translatePoint(newRange.lower, bar_with_limit.viewRange, visibleRange)
-            val upper = translatePoint(newRange.upper, bar_with_limit.viewRange, visibleRange)
+            val lower = translatePoint(newRange.lower, bar_with_limit.abstractConstraints.visibleRange, visibleRange)
+            val upper = translatePoint(newRange.upper, bar_with_limit.abstractConstraints.visibleRange, visibleRange)
             selectedRange.set(lower, upper)
-            // Even though it is limited at UI level, it is required to be limited it here to prevent
+            // Even though it is limited at UI level, it is required to be limited here to prevent
             // such edge cases: translatePoint: 871 from Range[72: 1848]. to Range[-27000: 33000].. Result -7
             selectedRange.clamp(allowedRange)
             updateTextLabels()
@@ -114,8 +117,8 @@ class DoubleSeekBarLayout @JvmOverloads constructor(
         }
         viewConstraints?.apply {
             // add initial constraints for left and right thumbs
-            leftThumbMoved(selectedRange.lower.toFloat())
-            rightThumbMoved(selectedRange.upper.toFloat())
+            leftThumbMoved(selectedRange.lower.toFloat(), false)
+            rightThumbMoved(selectedRange.upper.toFloat(), false)
         }
     }
 
@@ -178,7 +181,7 @@ class DoubleSeekBarLayout @JvmOverloads constructor(
     private fun translatePointNoClamping(x: Int, range: Range, translatedRange: Range): Int {
         // converting to long to prevent overflows
         val result = (translatedRange.width.toLong() * x / range.width).toInt()
-        Log.d(TAG, "translatePointNoClamping: $x from $range to $translatedRange. Result $result")
+//        Log.d(TAG, "translatePointNoClamping: $x from $range to $translatedRange. Result $result")
         return result
     }
 
