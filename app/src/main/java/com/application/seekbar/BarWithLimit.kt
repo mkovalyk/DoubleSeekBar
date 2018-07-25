@@ -47,19 +47,27 @@ class BarWithLimit @JvmOverloads constructor(context: Context, attrs: AttributeS
         updateTranslatedConstraints(newValue)
     }
 
+    var currentListener: ((value: Int) -> Unit)? = null
+
+    var translatedConstraints = Constraints.EMPTY
+
     private fun updateTranslatedConstraints(newValue: Constraints) {
         val offset = -newValue.visibleRange.lower
         with(newValue) {
-            translatedConstraints = Constraints(allowedRange.shiftImmutable(offset),
-                    totalRange.shiftImmutable(offset),
-                    selectedRange.shiftImmutable(offset), current + offset, visibleRange.shiftImmutable(offset),
-                    minRange, tolerate, multiplier)
+            translatedConstraints.let {
+                it.selectedRange.set(selectedRange.shiftImmutable(offset))
+                it.allowedRange.set(allowedRange.shiftImmutable(offset))
+                it.totalRange.set(totalRange.shiftImmutable(offset))
+                it.visibleRange.set(visibleRange.shiftImmutable(offset))
+//                if (it.current != current + offset) {
+                it.current = current + offset
+//                }
+            }
             Log.d("BarWithLimit", "TranslatedConstraints: $translatedConstraints" +
                     "\n -----------------------------------------------")
         }
     }
 
-    var translatedConstraints = Constraints.EMPTY
 
     private val selectedPaint by lazy {
         Paint().apply {
@@ -78,6 +86,11 @@ class BarWithLimit @JvmOverloads constructor(context: Context, attrs: AttributeS
         isAntiAlias = true
         strokeWidth = lineStep * 0.3f // randomly selected value
         isDither = true
+    }
+
+    fun updateSelectedRange(range: Range) {
+        translatedConstraints.selectedRange.set(range)
+        abstractConstraints.selectedRange.set(range.shiftImmutable(abstractConstraints.visibleRange.lower))
     }
 
     private fun drawBackground(canvas: Canvas) {
@@ -154,6 +167,7 @@ class BarWithLimit @JvmOverloads constructor(context: Context, attrs: AttributeS
                             visibleRange.shift(delta)
                             selectedRange.shift(delta)
                             current += delta
+                            currentListener?.invoke(current)
 //                            translatedConstraints.visibleRange.shift(delta)
 //                            translatedConstraints.selectedRange.shift(delta)
                             Log.d("BarWithLimit", "onTouchEvent: delta $delta. Total range: $abstractConstraints." +

@@ -31,20 +31,20 @@ class DoubleSeekBarLayout @JvmOverloads constructor(
     init {
         LayoutInflater.from(context).inflate(R.layout.layout_double_seek_bar, this)
         left_thumb.listener = { newValue, byUser ->
-            //            if (byUser) {
             leftThumbMoved(newValue, byUser)
-//            }
         }
 
         right_thumb.listener = { newValue, byUser ->
-            //            if (byUser) {
             rightThumbMoved(newValue, byUser)
-//            }
         }
         bar_with_limit.viewRange.listener = { _ ->
             if (constraints != null) {
                 updateConstraints(constraints!!)
             }
+        }
+        bar_with_limit.currentListener = {
+            val value = translatePointNoClamping(it, bar_with_limit.abstractConstraints.visibleRange, constraints!!.visibleRange)
+            text_value.text = value.toString()
         }
     }
 
@@ -52,7 +52,8 @@ class DoubleSeekBarLayout @JvmOverloads constructor(
         viewConstraints?.apply {
             val intValue = newValue.toInt()
             if (byUser) {
-                selectedRange.set(selectedRange.lower, intValue)
+                bar_with_limit.updateSelectedRange(Range(selectedRange.lower, intValue))
+//                selectedRange.set(selectedRange.lower, intValue)
             }
             // update maximal value for left thumb
             val value = min(current, intValue - minRange)
@@ -65,7 +66,8 @@ class DoubleSeekBarLayout @JvmOverloads constructor(
         viewConstraints?.apply {
             val intValue = newValue.toInt()
             if (byUser) {
-                selectedRange.set(intValue, selectedRange.upper)
+                bar_with_limit.updateSelectedRange(Range(intValue, selectedRange.upper))
+//                selectedRange.set(intValue, selectedRange.upper)
             }
             // update minimal value for right thumb
             val value = max(current, intValue + minRange)
