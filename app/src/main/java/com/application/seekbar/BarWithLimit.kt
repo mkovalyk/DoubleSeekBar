@@ -79,8 +79,9 @@ class BarWithLimit @JvmOverloads constructor(context: Context, attrs: AttributeS
 
     fun updateSelectedRange(range: Range) {
         relativeConstraints.selectedRange.set(range)
-        absoluteConstraints.selectedRange.set(range.shiftImmutable(absoluteConstraints.visibleRange.lower)
-                .shift(-viewRange.lower))
+        with(absoluteConstraints) {
+            selectedRange.set(range.shiftImmutable(visibleRange.lower - viewRange.lower))
+        }
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -102,12 +103,12 @@ class BarWithLimit @JvmOverloads constructor(context: Context, attrs: AttributeS
                     with(absoluteConstraints) {
                         val visibleRangeUpdated = visibleRange.shiftImmutable(delta)
                         val selectedRangeUpdated = selectedRange.shiftImmutable(delta)
+                        // make sure new values fits our needs
                         if (totalRange.contains(visibleRangeUpdated) && allowedRange.contains(selectedRangeUpdated)) {
                             visibleRange.shift(delta)
                             selectedRange.shift(delta)
                             current += delta
                             currentListener?.invoke(current)
-
                             invalidate()
                         }
                     }
@@ -198,26 +199,26 @@ class BarWithLimit @JvmOverloads constructor(context: Context, attrs: AttributeS
             with(relativeConstraints) {
                 val startDisabled = Range(totalRange.lower, allowedRange.lower).clamp(viewRange)
                 val endDisabled = Range(allowedRange.upper, totalRange.upper).clamp(viewRange)
-                drawDisabledArea(startDisabled, false)
-                drawDisabledArea(endDisabled, true)
+                drawDisabledArea(canvas, startDisabled, true)
+                drawDisabledArea(canvas, endDisabled, false)
             }
             restore()
         }
     }
 
-    private fun Canvas.drawDisabledArea(range: Range, startFromEnd: Boolean) {
+    private fun drawDisabledArea(canvas: Canvas, range: Range, startFromEnd: Boolean) {
         if (!range.isEmpty()) {
-            clipRect(range.lower.toFloat(), 0f, range.upper.toFloat(), viewHeight)
+            canvas.clipRect(range.lower.toFloat(), 0f, range.upper.toFloat(), viewHeight)
             if (startFromEnd) {
                 var iterator = range.upper + viewHeight
-                while (iterator >= range.upper - viewHeight) {
-                    drawLine(iterator, viewHeight, iterator + viewHeight, 0f, linePaint)
+                while (iterator >= range.lower - viewHeight) {
+                    canvas.drawLine(iterator, viewHeight, iterator + viewHeight, 0f, linePaint)
                     iterator -= lineStep
                 }
             } else {
                 var iterator = range.lower - viewHeight
                 while (iterator <= range.upper + viewHeight) {
-                    drawLine(iterator, viewHeight, iterator + viewHeight, 0f, linePaint)
+                    canvas.drawLine(iterator, viewHeight, iterator + viewHeight, 0f, linePaint)
                     iterator += lineStep
                 }
             }
