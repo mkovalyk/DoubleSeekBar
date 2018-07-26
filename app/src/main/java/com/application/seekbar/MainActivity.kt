@@ -33,6 +33,7 @@ class MainActivity : AppCompatActivity() {
         val selectedOffset = 5 * 1000
         val minRange = 4 * 1000
 
+        layout.currentValueChangeListener = { value -> Log.d(TAG, "new Value: $value") }
         layout.post {
             layout.constraints = Constraints(Range(0, videoDuration), Range(-width / 2, videoDuration + width / 2),
                     Range(current - selectedOffset, current + selectedOffset), current,

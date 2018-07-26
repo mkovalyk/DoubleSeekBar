@@ -210,6 +210,7 @@ class BarWithLimit @JvmOverloads constructor(context: Context, attrs: AttributeS
         if (!range.isEmpty()) {
             canvas.clipRect(range.lower.toFloat(), 0f, range.upper.toFloat(), viewHeight)
             if (startFromEnd) {
+                // draw from end so for movements it should changes it's location as well
                 var iterator = range.upper + viewHeight
                 while (iterator >= range.lower - viewHeight) {
                     canvas.drawLine(iterator, viewHeight, iterator + viewHeight, 0f, linePaint)

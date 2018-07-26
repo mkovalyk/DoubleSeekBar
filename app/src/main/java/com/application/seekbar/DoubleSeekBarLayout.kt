@@ -4,7 +4,6 @@ import android.content.Context
 import android.support.constraint.ConstraintLayout
 import android.text.SpannableStringBuilder
 import android.util.AttributeSet
-import android.util.Log
 import android.view.LayoutInflater
 import android.widget.ImageView
 import android.widget.TextView
@@ -20,23 +19,25 @@ import kotlin.math.min
 class DoubleSeekBarLayout @JvmOverloads constructor(
         context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0) :
         ConstraintLayout(context, attrs, defStyleAttr) {
+
+    private var viewConstraints: Constraints? = null
+
     var constraints: Constraints? = null
         set(value) {
             field = value
             updateConstraints(value!!)
         }
 
-    private var viewConstraints: Constraints? = null
+    var currentValueChangeListener: ((value: Int) -> Unit)? = null
+
+    // Getter for tag icon. It may change in future so there is no reason to use tag_icon directly
+    val tagIcon: ImageView
+        get() = tag_icon
 
     init {
         LayoutInflater.from(context).inflate(R.layout.layout_double_seek_bar, this)
-        left_thumb.listener = { newValue, byUser ->
-            leftThumbMoved(newValue, byUser)
-        }
-
-        right_thumb.listener = { newValue, byUser ->
-            rightThumbMoved(newValue, byUser)
-        }
+        left_thumb.listener = ::leftThumbMoved
+        right_thumb.listener = ::rightThumbMoved
         bar_with_limit.viewRange.listener = { _ ->
             if (constraints != null) {
                 updateConstraints(constraints!!)
@@ -44,6 +45,7 @@ class DoubleSeekBarLayout @JvmOverloads constructor(
         }
         bar_with_limit.currentListener = {
             val value = translatePointNoClamping(it, bar_with_limit.absoluteConstraints.visibleRange, constraints!!.visibleRange)
+            currentValueChangeListener?.invoke(value)
             text_value.text = value.toString()
             updateMaxRangesForThumbs()
         }
@@ -54,7 +56,6 @@ class DoubleSeekBarLayout @JvmOverloads constructor(
             val intValue = newValue.toInt()
             if (byUser) {
                 bar_with_limit.updateSelectedRange(Range(selectedRange.lower, intValue))
-//                selectedRange.set(selectedRange.lower, intValue)
             }
             // update maximal value for left thumb
             val value = min(current, intValue - minRange)
@@ -68,7 +69,6 @@ class DoubleSeekBarLayout @JvmOverloads constructor(
             val intValue = newValue.toInt()
             if (byUser) {
                 bar_with_limit.updateSelectedRange(Range(intValue, selectedRange.upper))
-//                selectedRange.set(intValue, selectedRange.upper)
             }
             // update minimal value for right thumb
             val value = max(current, intValue + minRange)
@@ -79,8 +79,8 @@ class DoubleSeekBarLayout @JvmOverloads constructor(
 
     private fun updateMaxRangesForThumbs() {
         viewConstraints?.apply {
-            right_thumb.range.set(right_thumb.range.lower, allowedRange.upper)
-            left_thumb.range.set(allowedRange.lower, left_thumb.range.upper)
+            right_thumb.range.set(right_thumb.range.lower, visibleRange.clamp(allowedRange.upper))
+            left_thumb.range.set(visibleRange.clamp(allowedRange.lower), left_thumb.range.upper)
         }
     }
 
@@ -94,7 +94,6 @@ class DoubleSeekBarLayout @JvmOverloads constructor(
         bar_with_limit.absoluteConstraints = convertToXY(newValue, bar_with_limit.viewRange)
         bar_with_limit.absoluteConstraints.selectedRange.listener = ::updateSelectedRange
         viewConstraints = bar_with_limit.relativeConstraints
-//        Log.d(TAG, "updateConstraints: viewConstraints:$viewConstraints")
         // post to make sure all layout operations are already performed
         post {
             viewConstraints?.apply {
@@ -112,11 +111,10 @@ class DoubleSeekBarLayout @JvmOverloads constructor(
     }
 
     private fun updateSelectedRange(newRange: Range) {
-        Log.d(TAG, "updateSelectedRange: $newRange")
         with(constraints!!) {
             // convert to origin coordinate
-            val lower = translatePoint(newRange.lower, bar_with_limit.absoluteConstraints.visibleRange, visibleRange)
-            val upper = translatePoint(newRange.upper, bar_with_limit.absoluteConstraints.visibleRange, visibleRange)
+            val lower = translatePointClamped(newRange.lower, bar_with_limit.absoluteConstraints.visibleRange, visibleRange)
+            val upper = translatePointClamped(newRange.upper, bar_with_limit.absoluteConstraints.visibleRange, visibleRange)
             selectedRange.set(lower, upper)
             // Even though it is limited at UI level, it is required to be limited here to prevent
             // such edge cases: translatePoint: 871 from Range[72: 1848]. to Range[-27000: 33000].. Result -7
@@ -146,9 +144,6 @@ class DoubleSeekBarLayout @JvmOverloads constructor(
         translateIfTextLabelsOverlapsWithIndicator()
     }
 
-    // Getter for tag icon. It may change in future so there is no reason to use tag_icon directly
-    val tagIcon: ImageView
-        get() = tag_icon
 
     private fun setTime(time: Float, into: TextView) {
         val endTime = SpannableStringBuilder()
@@ -175,27 +170,17 @@ class DoubleSeekBarLayout @JvmOverloads constructor(
                     translatePointNoClamping(visibleRange.upper, visibleRange, viewRange))
 
             val minDuration = minRange * viewRange.width / visibleRange.width
-            val result = Constraints(allowedRange, totalRange, selectedRange, current, range, minDuration, true)
-            Log.d(TAG, "convertToXY: Result: $result")
-            return result
+            return Constraints(allowedRange, totalRange, selectedRange, current, range, minDuration, true)
         }
     }
 
-    private fun translatePoint(x: Int, range: Range, translatedRange: Range): Int {
+    private fun translatePointClamped(x: Int, range: Range, translatedRange: Range): Int {
         // converting to long to prevent overflows
-        val result = translatedRange.clamp((translatedRange.lower + translatedRange.width.toLong() * (x - range.lower) / range.width).toInt())
-        Log.d(TAG, "translatePoint: $x from $range to $translatedRange. Result $result")
-        return result
+        return translatedRange.clamp((translatedRange.lower + translatedRange.width.toLong() * (x - range.lower) / range.width).toInt())
     }
 
     private fun translatePointNoClamping(x: Int, range: Range, translatedRange: Range): Int {
         // converting to long to prevent overflows
-        val result = (translatedRange.width.toLong() * x / range.width).toInt()
-//        Log.d(TAG, "translatePointNoClamping: $x from $range to $translatedRange. Result $result")
-        return result
-    }
-
-    companion object {
-        const val TAG = "DoubleSeekBarLayout"
+        return (translatedRange.width.toLong() * x / range.width).toInt()
     }
 }
