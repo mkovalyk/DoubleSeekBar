@@ -43,7 +43,7 @@ class DoubleSeekBarLayout @JvmOverloads constructor(
             }
         }
         bar_with_limit.currentListener = {
-            val value = translatePointNoClamping(it, bar_with_limit.abstractConstraints.visibleRange, constraints!!.visibleRange)
+            val value = translatePointNoClamping(it, bar_with_limit.absoluteConstraints.visibleRange, constraints!!.visibleRange)
             text_value.text = value.toString()
             updateMaxRangesForThumbs()
         }
@@ -91,9 +91,9 @@ class DoubleSeekBarLayout @JvmOverloads constructor(
     }
 
     private fun updateConstraints(newValue: Constraints) {
-        bar_with_limit.abstractConstraints = convertToXY(newValue, bar_with_limit.viewRange)
-        bar_with_limit.abstractConstraints.selectedRange.listener = ::updateSelectedRange
-        viewConstraints = bar_with_limit.translatedConstraints
+        bar_with_limit.absoluteConstraints = convertToXY(newValue, bar_with_limit.viewRange)
+        bar_with_limit.absoluteConstraints.selectedRange.listener = ::updateSelectedRange
+        viewConstraints = bar_with_limit.relativeConstraints
 //        Log.d(TAG, "updateConstraints: viewConstraints:$viewConstraints")
         // post to make sure all layout operations are already performed
         post {
@@ -115,8 +115,8 @@ class DoubleSeekBarLayout @JvmOverloads constructor(
         Log.d(TAG, "updateSelectedRange: $newRange")
         with(constraints!!) {
             // convert to origin coordinate
-            val lower = translatePoint(newRange.lower, bar_with_limit.abstractConstraints.visibleRange, visibleRange)
-            val upper = translatePoint(newRange.upper, bar_with_limit.abstractConstraints.visibleRange, visibleRange)
+            val lower = translatePoint(newRange.lower, bar_with_limit.absoluteConstraints.visibleRange, visibleRange)
+            val upper = translatePoint(newRange.upper, bar_with_limit.absoluteConstraints.visibleRange, visibleRange)
             selectedRange.set(lower, upper)
             // Even though it is limited at UI level, it is required to be limited here to prevent
             // such edge cases: translatePoint: 871 from Range[72: 1848]. to Range[-27000: 33000].. Result -7

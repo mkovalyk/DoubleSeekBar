@@ -22,9 +22,9 @@ class BarWithLimit @JvmOverloads constructor(context: Context, attrs: AttributeS
     private val backgroundColor: Int
     private val lineColor: Int
     private val selectedColor: Int
+    private val pattern: Bitmap
 
     val viewRange = Range.EMPTY
-    private val pattern: Bitmap
 
     init {
         val theme = context.theme
@@ -40,39 +40,13 @@ class BarWithLimit @JvmOverloads constructor(context: Context, attrs: AttributeS
         styleAttrs.recycle()
     }
 
-    /**
-     * Ranges of views
-     */
-    var abstractConstraints: Constraints by Delegates.observable(Constraints.EMPTY) { _, _, newValue ->
-        updateTranslatedConstraints(newValue)
-    }
-
-    var currentListener: ((value: Int) -> Unit)? = null
-
-    var translatedConstraints = Constraints.EMPTY
-
-    private fun updateTranslatedConstraints(newValue: Constraints) {
-        val offset = -newValue.visibleRange.lower
-        with(newValue) {
-            translatedConstraints.let {
-                it.selectedRange.set(selectedRange.shiftImmutable(offset)).shift(viewRange.lower)
-                it.allowedRange.set(allowedRange.shiftImmutable(offset)).shift(viewRange.lower)
-                it.totalRange.set(totalRange.shiftImmutable(offset)).shift(viewRange.lower)
-                it.visibleRange.set(visibleRange.shiftImmutable(offset)).shift(viewRange.lower)
-                it.current = current + offset + viewRange.lower
-                it.minRange = minRange
-            }
-        }
-    }
-
-
     private val selectedPaint by lazy {
         Paint().apply {
             color = selectedColor
         }
     }
 
-    private val backgroundPaint by lazy {
+    private val backgroundTimeMarkPaint by lazy {
         Paint().apply {
             shader = BitmapShader(pattern, Shader.TileMode.REPEAT, Shader.TileMode.MIRROR)
         }
@@ -85,83 +59,47 @@ class BarWithLimit @JvmOverloads constructor(context: Context, attrs: AttributeS
         isDither = true
     }
 
+    private var prevX = 0f
+    private var index = INVALID_ID
+
+    /**
+     * It is absolute values of constraints.. Doesn't change after visible range is changed.
+     */
+    var absoluteConstraints: Constraints by Delegates.observable(Constraints.EMPTY) { _, _, newValue ->
+        updateTranslatedConstraints(newValue)
+    }
+
+    /**
+     * Constraints that is using for drawing. It is translated to visible range on every change of
+     * the visible area.
+     */
+    var relativeConstraints = Constraints.EMPTY
+
+    var currentListener: ((value: Int) -> Unit)? = null
+
     fun updateSelectedRange(range: Range) {
-        translatedConstraints.selectedRange.set(range)
-        abstractConstraints.selectedRange.set(range.shiftImmutable(abstractConstraints.visibleRange.lower)
+        relativeConstraints.selectedRange.set(range)
+        absoluteConstraints.selectedRange.set(range.shiftImmutable(absoluteConstraints.visibleRange.lower)
                 .shift(-viewRange.lower))
     }
 
-    private fun drawBackground(canvas: Canvas) {
-        with(canvas) {
-            save()
-            clipPath(path)
-            drawColor(backgroundColor)
-
-            with(translatedConstraints) {
-                val startDisabled = Range(totalRange.lower, allowedRange.lower).clamp(viewRange)
-                val endDisabled = Range(allowedRange.upper, totalRange.upper).clamp(viewRange)
-                drawDisabledArea(startDisabled)
-                drawDisabledArea(endDisabled)
-            }
-            restore()
-        }
-    }
-
-    private fun drawTimeDividers(constraints: Constraints, canvas: Canvas) {
-        val bitmapVerticalOffset = (viewHeight - pattern.height) / 2
-        val horizontalOffset = (abstractConstraints.visibleRange.lower) % pattern.width - viewRange.lower
-        val backgroundRange = constraints.allowedRange.clampImmutable(constraints.visibleRange).shift(-viewRange.lower)
-
-        with(canvas) {
-            save()
-            clipPath(path)
-            clipRect(constraints.allowedRange.lower.toFloat(), 0f, constraints.allowedRange.upper.toFloat(), viewHeight)
-            translate(-horizontalOffset.toFloat(), bitmapVerticalOffset)
-            val rect = RectF(backgroundRange.lower.toFloat() - pattern.width, 0f, backgroundRange.upper.toFloat() + pattern.width, pattern.height.toFloat())
-            drawRect(rect, backgroundPaint)
-            restore()
-        }
-    }
-
-    private fun Canvas.drawDisabledArea(range: Range) {
-        if (!range.isEmpty()) {
-            clipRect(range.lower.toFloat(), 0f, range.upper.toFloat(), viewHeight)
-            var iterator = range.lower - viewHeight
-            while (iterator <= range.upper + viewHeight) {
-                drawLine(iterator, viewHeight, iterator + viewHeight, 0f, linePaint)
-                iterator += lineStep
-            }
-        }
-    }
-
-    private fun drawSelectedArea(canvas: Canvas) {
-        with(canvas) {
-            save()
-            clipPath(path)
-            with(translatedConstraints) {
-                val left = viewRange.clamp(selectedRange.lower).toFloat()
-                val right = viewRange.clamp(selectedRange.upper.toFloat())
-                drawRect(left, 0f, right, viewHeight, selectedPaint)
-            }
-            restore()
-        }
-    }
-
-    private var prevX = 0f
-    private val threshold = 3f
-
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent): Boolean {
+        val pointerId = event.getPointerId(0)
+
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
-                prevX = event.x
+                if (index == INVALID_ID) {
+                    prevX = event.x
+                    index = pointerId
+                }
                 return true
             }
+
             MotionEvent.ACTION_MOVE -> {
-                val delta = (prevX - event.x).toInt()
-                // don't spam too often
-                if (Math.abs(delta) > threshold) {
-                    with(abstractConstraints) {
+                if (index == pointerId) {
+                    val delta = (prevX - event.x).toInt()
+                    with(absoluteConstraints) {
                         val visibleRangeUpdated = visibleRange.shiftImmutable(delta)
                         val selectedRangeUpdated = selectedRange.shiftImmutable(delta)
                         if (totalRange.contains(visibleRangeUpdated) && allowedRange.contains(selectedRangeUpdated)) {
@@ -176,6 +114,12 @@ class BarWithLimit @JvmOverloads constructor(context: Context, attrs: AttributeS
                     prevX = event.x
                 }
                 return true
+            }
+
+            MotionEvent.ACTION_CANCEL, MotionEvent.ACTION_UP -> {
+                if (pointerId == index) {
+                    index = INVALID_ID
+                }
             }
         }
         return super.onTouchEvent(event)
@@ -206,13 +150,13 @@ class BarWithLimit @JvmOverloads constructor(context: Context, attrs: AttributeS
         // only after view is laid out margins are available
         val marginStart = x.toInt()
         viewRange.set(marginStart + paddingStart, marginStart + measuredWidth - paddingEnd)
-        clipRect.set(translatedConstraints.visibleRange.lower.toFloat(), 0f,
-                translatedConstraints.visibleRange.upper.toFloat(), viewHeight)
+        clipRect.set(relativeConstraints.visibleRange.lower.toFloat(), 0f,
+                relativeConstraints.visibleRange.upper.toFloat(), viewHeight)
     }
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-        updateTranslatedConstraints(abstractConstraints)
+        updateTranslatedConstraints(absoluteConstraints)
         path.rewind()
         path.addRoundRect(clipRect, viewHeight / 2f, viewHeight / 2f, Path.Direction.CCW)
 
@@ -225,7 +169,91 @@ class BarWithLimit @JvmOverloads constructor(context: Context, attrs: AttributeS
         drawBackground(canvas)
         drawSelectedArea(canvas)
 
-        drawTimeDividers(translatedConstraints, canvas)
+        drawTimeDividers(relativeConstraints, canvas)
         canvas.restore()
+    }
+
+    private fun updateTranslatedConstraints(newValue: Constraints) {
+        // to translate it to currently visible area - just shift it by start offset of the visible area
+        // and add view start padding.
+        val offset = -newValue.visibleRange.lower + viewRange.lower
+        with(newValue) {
+            relativeConstraints.let {
+                it.selectedRange.set(selectedRange.shiftImmutable(offset))
+                it.allowedRange.set(allowedRange.shiftImmutable(offset))
+                it.totalRange.set(totalRange.shiftImmutable(offset))
+                it.visibleRange.set(visibleRange.shiftImmutable(offset))
+                it.current = current + offset
+                it.minRange = minRange
+            }
+        }
+    }
+
+    private fun drawBackground(canvas: Canvas) {
+        with(canvas) {
+            save()
+            clipPath(path)
+            drawColor(backgroundColor)
+
+            with(relativeConstraints) {
+                val startDisabled = Range(totalRange.lower, allowedRange.lower).clamp(viewRange)
+                val endDisabled = Range(allowedRange.upper, totalRange.upper).clamp(viewRange)
+                drawDisabledArea(startDisabled, false)
+                drawDisabledArea(endDisabled, true)
+            }
+            restore()
+        }
+    }
+
+    private fun Canvas.drawDisabledArea(range: Range, startFromEnd: Boolean) {
+        if (!range.isEmpty()) {
+            clipRect(range.lower.toFloat(), 0f, range.upper.toFloat(), viewHeight)
+            if (startFromEnd) {
+                var iterator = range.upper + viewHeight
+                while (iterator >= range.upper - viewHeight) {
+                    drawLine(iterator, viewHeight, iterator + viewHeight, 0f, linePaint)
+                    iterator -= lineStep
+                }
+            } else {
+                var iterator = range.lower - viewHeight
+                while (iterator <= range.upper + viewHeight) {
+                    drawLine(iterator, viewHeight, iterator + viewHeight, 0f, linePaint)
+                    iterator += lineStep
+                }
+            }
+        }
+    }
+
+    private fun drawSelectedArea(canvas: Canvas) {
+        with(canvas) {
+            save()
+            clipPath(path)
+            with(relativeConstraints) {
+                val left = viewRange.clamp(selectedRange.lower).toFloat()
+                val right = viewRange.clamp(selectedRange.upper.toFloat())
+                drawRect(left, 0f, right, viewHeight, selectedPaint)
+            }
+            restore()
+        }
+    }
+
+    private fun drawTimeDividers(constraints: Constraints, canvas: Canvas) {
+        val bitmapVerticalOffset = (viewHeight - pattern.height) / 2
+        val horizontalOffset = (absoluteConstraints.visibleRange.lower) % pattern.width - viewRange.lower
+        val backgroundRange = constraints.allowedRange.clampImmutable(constraints.visibleRange).shift(-viewRange.lower)
+
+        with(canvas) {
+            save()
+            clipPath(path)
+            clipRect(constraints.allowedRange.lower.toFloat(), 0f, constraints.allowedRange.upper.toFloat(), viewHeight)
+            translate(-horizontalOffset.toFloat(), bitmapVerticalOffset)
+            val rect = RectF(backgroundRange.lower.toFloat() - pattern.width, 0f, backgroundRange.upper.toFloat() + pattern.width, pattern.height.toFloat())
+            drawRect(rect, backgroundTimeMarkPaint)
+            restore()
+        }
+    }
+
+    companion object {
+        const val INVALID_ID = -1
     }
 }
