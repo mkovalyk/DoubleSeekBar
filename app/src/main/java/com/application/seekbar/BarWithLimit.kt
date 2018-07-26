@@ -1,9 +1,9 @@
 package com.application.seekbar
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
-import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import kotlin.properties.Delegates
@@ -24,7 +24,7 @@ class BarWithLimit @JvmOverloads constructor(context: Context, attrs: AttributeS
     private val selectedColor: Int
 
     val viewRange = Range.EMPTY
-    val pattern: Bitmap
+    private val pattern: Bitmap
 
     init {
         val theme = context.theme
@@ -62,8 +62,6 @@ class BarWithLimit @JvmOverloads constructor(context: Context, attrs: AttributeS
                 it.current = current + offset + viewRange.lower
                 it.minRange = minRange
             }
-            Log.d("BarWithLimit", "TranslatedConstraints: $translatedConstraints" +
-                    "\n -----------------------------------------------")
         }
     }
 
@@ -76,7 +74,7 @@ class BarWithLimit @JvmOverloads constructor(context: Context, attrs: AttributeS
 
     private val backgroundPaint by lazy {
         Paint().apply {
-            shader = BitmapShader(pattern, Shader.TileMode.REPEAT, Shader.TileMode.REPEAT)
+            shader = BitmapShader(pattern, Shader.TileMode.REPEAT, Shader.TileMode.MIRROR)
         }
     }
 
@@ -100,24 +98,27 @@ class BarWithLimit @JvmOverloads constructor(context: Context, attrs: AttributeS
             drawColor(backgroundColor)
 
             with(translatedConstraints) {
-                val bitmapVerticalOffset = (viewHeight - pattern.height) / 2
-                val horizontalOffset = abstractConstraints.visibleRange.lower % pattern.width.toFloat()
-                val backgroundRange = allowedRange.apply { clamp(viewRange) }
-
-                save()
-                clipRect(backgroundRange.lower.toFloat(), 0f, backgroundRange.upper.toFloat(), viewHeight)
-                translate(-horizontalOffset, bitmapVerticalOffset)
-                drawRect(viewRange.lower.toFloat(), 0f,
-                        viewRange.upper.toFloat() - if (horizontalOffset > 0) -horizontalOffset else horizontalOffset,
-                        pattern.height.toFloat(), backgroundPaint)
-                restore()
-
                 val startDisabled = Range(totalRange.lower, allowedRange.lower).clamp(viewRange)
                 val endDisabled = Range(allowedRange.upper, totalRange.upper).clamp(viewRange)
-//                Log.d("Draw", "drawBackground: Start: $startDisabled. End: $endDisabled")
                 drawDisabledArea(startDisabled)
                 drawDisabledArea(endDisabled)
             }
+            restore()
+        }
+    }
+
+    private fun drawTimeDividers(constraints: Constraints, canvas: Canvas) {
+        val bitmapVerticalOffset = (viewHeight - pattern.height) / 2
+        val horizontalOffset = (abstractConstraints.visibleRange.lower) % pattern.width - viewRange.lower
+        val backgroundRange = constraints.allowedRange.clampImmutable(constraints.visibleRange).shift(-viewRange.lower)
+
+        with(canvas) {
+            save()
+            clipPath(path)
+            clipRect(constraints.allowedRange.lower.toFloat(), 0f, constraints.allowedRange.upper.toFloat(), viewHeight)
+            translate(-horizontalOffset.toFloat(), bitmapVerticalOffset)
+            val rect = RectF(backgroundRange.lower.toFloat() - pattern.width, 0f, backgroundRange.upper.toFloat() + pattern.width, pattern.height.toFloat())
+            drawRect(rect, backgroundPaint)
             restore()
         }
     }
@@ -141,15 +142,15 @@ class BarWithLimit @JvmOverloads constructor(context: Context, attrs: AttributeS
                 val left = viewRange.clamp(selectedRange.lower).toFloat()
                 val right = viewRange.clamp(selectedRange.upper.toFloat())
                 drawRect(left, 0f, right, viewHeight, selectedPaint)
-                Log.d("Draw", "drawSelected: Left: $left. Right: $right")
             }
             restore()
         }
     }
 
     private var prevX = 0f
-    private val threshold = 5f
+    private val threshold = 3f
 
+    @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent): Boolean {
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
@@ -168,8 +169,6 @@ class BarWithLimit @JvmOverloads constructor(context: Context, attrs: AttributeS
                             selectedRange.shift(delta)
                             current += delta
                             currentListener?.invoke(current)
-                            Log.d("BarWithLimit", "onTouchEvent: delta $delta. Total range: $abstractConstraints." +
-                                    "Visible: $visibleRangeUpdated + current: $current")
 
                             invalidate()
                         }
@@ -217,6 +216,7 @@ class BarWithLimit @JvmOverloads constructor(context: Context, attrs: AttributeS
         path.rewind()
         path.addRoundRect(clipRect, viewHeight / 2f, viewHeight / 2f, Path.Direction.CCW)
 
+        canvas.save()
         //Translate back by margin from start to draw in correct position.
         // It is used that way because to evaluate view range we need to know position related to it's
         // parent which includes margin from left and right.
@@ -224,5 +224,8 @@ class BarWithLimit @JvmOverloads constructor(context: Context, attrs: AttributeS
 
         drawBackground(canvas)
         drawSelectedArea(canvas)
+
+        drawTimeDividers(translatedConstraints, canvas)
+        canvas.restore()
     }
 }
