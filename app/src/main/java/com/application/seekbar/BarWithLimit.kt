@@ -55,13 +55,12 @@ class BarWithLimit @JvmOverloads constructor(context: Context, attrs: AttributeS
         val offset = -newValue.visibleRange.lower
         with(newValue) {
             translatedConstraints.let {
-                it.selectedRange.set(selectedRange.shiftImmutable(offset))
-                it.allowedRange.set(allowedRange.shiftImmutable(offset))
-                it.totalRange.set(totalRange.shiftImmutable(offset))
-                it.visibleRange.set(visibleRange.shiftImmutable(offset))
-//                if (it.current != current + offset) {
-                it.current = current + offset
-//                }
+                it.selectedRange.set(selectedRange.shiftImmutable(offset)).shift(viewRange.lower)
+                it.allowedRange.set(allowedRange.shiftImmutable(offset)).shift(viewRange.lower)
+                it.totalRange.set(totalRange.shiftImmutable(offset)).shift(viewRange.lower)
+                it.visibleRange.set(visibleRange.shiftImmutable(offset)).shift(viewRange.lower)
+                it.current = current + offset + viewRange.lower
+                it.minRange = minRange
             }
             Log.d("BarWithLimit", "TranslatedConstraints: $translatedConstraints" +
                     "\n -----------------------------------------------")
@@ -90,7 +89,8 @@ class BarWithLimit @JvmOverloads constructor(context: Context, attrs: AttributeS
 
     fun updateSelectedRange(range: Range) {
         translatedConstraints.selectedRange.set(range)
-        abstractConstraints.selectedRange.set(range.shiftImmutable(abstractConstraints.visibleRange.lower))
+        abstractConstraints.selectedRange.set(range.shiftImmutable(abstractConstraints.visibleRange.lower)
+                .shift(-viewRange.lower))
     }
 
     private fun drawBackground(canvas: Canvas) {
@@ -168,8 +168,6 @@ class BarWithLimit @JvmOverloads constructor(context: Context, attrs: AttributeS
                             selectedRange.shift(delta)
                             current += delta
                             currentListener?.invoke(current)
-//                            translatedConstraints.visibleRange.shift(delta)
-//                            translatedConstraints.selectedRange.shift(delta)
                             Log.d("BarWithLimit", "onTouchEvent: delta $delta. Total range: $abstractConstraints." +
                                     "Visible: $visibleRangeUpdated + current: $current")
 
@@ -209,7 +207,8 @@ class BarWithLimit @JvmOverloads constructor(context: Context, attrs: AttributeS
         // only after view is laid out margins are available
         val marginStart = x.toInt()
         viewRange.set(marginStart + paddingStart, marginStart + measuredWidth - paddingEnd)
-        clipRect.set(viewRange.lower.toFloat(), 0f, viewRange.upper.toFloat(), viewHeight)
+        clipRect.set(translatedConstraints.visibleRange.lower.toFloat(), 0f,
+                translatedConstraints.visibleRange.upper.toFloat(), viewHeight)
     }
 
     override fun onDraw(canvas: Canvas) {

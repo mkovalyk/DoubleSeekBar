@@ -61,7 +61,7 @@ class Range constructor(lower: Int, upper: Int) {
         return Range(max(this.lower, range.lower), min(this.upper, range.upper))
     }
 
-    fun set(lower: Int, upper: Int) {
+    fun set(lower: Int, upper: Int): Range {
         checkInvariance(lower, upper)
         if (lower != this.lower || upper != this.upper) {
             this.lower = lower
@@ -69,15 +69,17 @@ class Range constructor(lower: Int, upper: Int) {
             this.width = upper - lower
             listener?.invoke(this)
         }
+        return this
     }
 
-    fun set(range: Range) {
+    fun set(range: Range): Range {
         if (range.lower != this.lower || range.upper != this.upper) {
             this.lower = range.lower
             this.upper = range.upper
             this.width = upper - lower
             listener?.invoke(this)
         }
+        return this
     }
 
     fun contains(value: Int): Boolean {
